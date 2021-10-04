@@ -32,13 +32,14 @@ public class DetectorManager : FSystem {
     }
     private void onNewCollision(GameObject robot){
 		if(activeRedDetector){
-			Triggered3D trigger = robot.GetComponent<Triggered3D>();
+            Triggered3D trigger = robot.GetComponent<Triggered3D>();
 			foreach(GameObject target in trigger.Targets){
 				//Check if the player collide with a detection cell
 				if (target.GetComponent<Detector>() != null){
-					//end level
-					GameObjectManager.addComponent<NewEnd>(endpanel_f.First(), new { endType = NewEnd.Detected });
-				}
+                    //end level
+                    GameObjectManager.addComponent<NewEnd>(endpanel_f.First(), new { endType = NewEnd.Detected });
+                    Debug.Log("Found");
+                }
 			}			
 		}
     }

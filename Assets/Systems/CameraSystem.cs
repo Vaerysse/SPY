@@ -54,7 +54,7 @@ public class CameraSystem : FSystem {
 			// if target is defined move smoothy camera to it 
 			if(target){
 				camera.transform.position = Vector3.MoveTowards(camera.transform.position, (target.position+offset), smoothSpeed);
-				camera.transform.LookAt(target); 
+				camera.transform.LookAt(target);
 			}
 
 			// move camera front/back depending on Vertical axis
@@ -75,9 +75,11 @@ public class CameraSystem : FSystem {
 			{
 				camera.transform.Rotate(Vector3.up * 90 * Time.deltaTime, Space.World);
 				target = null;
+				Debug.Log("Pressed A");
 			}
 			else if (Input.GetKey(KeyCode.E))
 			{
+				Debug.Log("Pressed E");
 				camera.transform.Rotate(-Vector3.up * 90 * Time.deltaTime, Space.World);
 				target = null;
 			}

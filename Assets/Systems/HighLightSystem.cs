@@ -54,27 +54,34 @@ public class HighLightSystem : FSystem {
 
 	public void highLightItem(GameObject go){
 		// first process currentAction in agents panels
-		if(go.GetComponent<CurrentAction>())
+		if (go.GetComponent<CurrentAction>())
 		{
 			go.GetComponent<Image>().color = MainLoop.instance.GetComponent<AgentColor>().currentActionColor;
 			Transform parent = go.transform.parent;
 			while (parent != null)
-            {
+			{
 				if (parent.GetComponent<ForAction>() || parent.GetComponent<ForeverAction>())
 					parent.transform.GetChild(0).GetComponent<Image>().color = MainLoop.instance.GetComponent<AgentColor>().currentActionColor;
 				parent = parent.parent;
 			}
 		}
 		// second manage sensitive UI inside editable panel
-		else if(go.GetComponent<BaseElement>() && go.GetComponent<PointerOver>())
+		else if (go.GetComponent<BaseElement>() && go.GetComponent<PointerOver>())
+		{
 			go.GetComponent<Image>().color = go.GetComponent<BaseElement>().highlightedColor;
+		}
 		// third sensitive UI inside library panel
 		else if (go.GetComponent<ElementToDrag>() && go.GetComponent<PointerOver>())
+		{
 			go.GetComponent<Image>().color = go.GetComponent<Highlightable>().highlightedColor;
+			Debug.Log("Highlight");
+		}
 		// then process world GameObjects (Walls, drone, robots...)
-		else if (go.GetComponentInChildren<Renderer>()){
+		else if (go.GetComponentInChildren<Renderer>())
+		{
 			go.GetComponentInChildren<Renderer>().material.color = go.GetComponent<Highlightable>().highlightedColor;
-			if(go.GetComponent<ScriptRef>()){
+			if (go.GetComponent<ScriptRef>())
+			{
 				Image img = go.GetComponent<ScriptRef>().uiContainer.transform.Find("Container").GetComponent<Image>();
 				img.color = img.GetComponent<Highlightable>().highlightedColor;
 			}

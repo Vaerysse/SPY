@@ -33,6 +33,7 @@ public class DoorManager : FSystem {
 				if (slotGo.GetComponent<ActivationSlot>().slotID == id)
 				{
 					// hide door
+					Debug.Log("Door opened");
 					slotGo.GetComponent<Renderer>().enabled = false;
 					slotGo.GetComponent<AudioSource>().Play();
 					GameObjectManager.setGameObjectState(slotGo, false);
