@@ -15,6 +15,7 @@ public class TitleScreenSystem : FSystem {
 	private GameObject playButton;
 	private GameObject quitButton;
 	private GameObject backButton;
+	private GameObject buttonLvlGenerator;
 	private GameObject cList;
 	private Dictionary<GameObject, List<GameObject>> levelButtons; //key = directory button,  value = list of level buttons
 
@@ -27,6 +28,7 @@ public class TitleScreenSystem : FSystem {
 			playButton = GameObject.Find("Jouer");
 			quitButton = GameObject.Find("Quitter");
 			backButton = GameObject.Find("Retour");
+			buttonLvlGenerator = GameObject.Find("LvlGenerator");
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("GameData"));
 
 			cList = GameObject.Find("CampagneList");
@@ -69,6 +71,7 @@ public class TitleScreenSystem : FSystem {
 		}
 	}
 
+	//Load Scenario list in XML (into the special folder)
 	private List<string> readScenario(string repositoryPath){
 		if(File.Exists(repositoryPath+Path.DirectorySeparatorChar+"Scenario.xml")){
 			List<string> levelList = new List<string>();
@@ -85,6 +88,7 @@ public class TitleScreenSystem : FSystem {
 		return null;
 	}
 
+	//Quit the application
 	protected override void onProcess(int familiesUpdateCount) {
 		if(Input.GetButtonDown("Cancel")){
 			Application.Quit();
@@ -94,7 +98,8 @@ public class TitleScreenSystem : FSystem {
 	// See Jouer button in editor
 	public void showCampagneMenu(){
 		GameObjectManager.setGameObjectState(campagneMenu, true);
-		foreach(GameObject directory in levelButtons.Keys){
+		GameObjectManager.setGameObjectState(buttonLvlGenerator, false);// fait disparaitre le bouton
+		foreach (GameObject directory in levelButtons.Keys){
 			//show directory buttons
 			GameObjectManager.setGameObjectState(directory, true);
 			//hide level buttons
@@ -146,8 +151,17 @@ public class TitleScreenSystem : FSystem {
 		}
 	}
 
+	//Load (after click to level select) the Main Scene for start a level
 	public void launchLevel(string levelDirectory, int level){
 		gameData.levelToLoad = (levelDirectory,level);
+		GameObjectManager.loadScene("MainScene");
+	}
+
+	//Load the scene for generation lvl test
+	public void genLvlTest()
+    {
+		gameData.levelToLoad = ("generique", 1);
+		Debug.Log("Generation procedural");
 		GameObjectManager.loadScene("MainScene");
 	}
 
@@ -159,6 +173,7 @@ public class TitleScreenSystem : FSystem {
 				GameObjectManager.setGameObjectState(campagneMenu, false);
 				GameObjectManager.setGameObjectState(playButton, true);
 				GameObjectManager.setGameObjectState(quitButton, true);
+				GameObjectManager.setGameObjectState(buttonLvlGenerator, true);
 				GameObjectManager.setGameObjectState(backButton, false);
 				break;
 			}

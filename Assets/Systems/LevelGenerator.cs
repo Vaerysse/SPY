@@ -30,8 +30,17 @@ public class LevelGenerator : FSystem {
 			gameData = gameDataGO.GetComponent<GameData>();
 			gameData.Level = GameObject.Find("Level");
 			scriptContainer = enemyScript.First();
-			XmlToLevel(gameData.levelList[gameData.levelToLoad.Item1][gameData.levelToLoad.Item2]);
-			GameObject.Find("LevelName").GetComponent<TMP_Text>().text = Path.GetFileNameWithoutExtension(gameData.levelList[gameData.levelToLoad.Item1][gameData.levelToLoad.Item2]);
+			Debug.Log(gameData.levelToLoad.Item1);
+			Debug.Log(gameData.levelToLoad.Item2);
+			if (gameData.levelToLoad.Item1 != "generique")
+			{
+				XmlToLevel(gameData.levelList[gameData.levelToLoad.Item1][gameData.levelToLoad.Item2]);
+				GameObject.Find("LevelName").GetComponent<TMP_Text>().text = Path.GetFileNameWithoutExtension(gameData.levelList[gameData.levelToLoad.Item1][gameData.levelToLoad.Item2]);
+			}
+			else
+			{
+				CreateLvlAuto();
+			}
 		}
 	}
 
@@ -447,4 +456,17 @@ public class LevelGenerator : FSystem {
 				computeNext(child.gameObject);
 		}
 	}
+
+
+	//Création de niveau auto
+	public void CreateLvlAuto() {
+		Debug.Log("Création niveau auto");
+		createCell(1,1);
+		createCell(1, 2);
+		createCell(2, 2);
+		createWall(2,1);
+		createEntity(1, 1,(Direction.Dir)1, "player", null);
+		createSpawnExit(2, 2, false);
+	}
+
 }

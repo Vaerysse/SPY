@@ -19,4 +19,9 @@ public class LevelGenerator_wrapper : MonoBehaviour
 		MainLoop.callAppropriateSystemMethod ("LevelGenerator", "computeNext", container);
 	}
 
+	public void CreateLvlAuto()
+	{
+		MainLoop.callAppropriateSystemMethod ("LevelGenerator", "CreateLvlAuto", null);
+	}
+
 }
