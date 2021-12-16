@@ -75,11 +75,9 @@ public class CameraSystem : FSystem {
 			{
 				camera.transform.Rotate(Vector3.up * 90 * Time.deltaTime, Space.World);
 				target = null;
-				Debug.Log("Pressed A");
 			}
 			else if (Input.GetKey(KeyCode.E))
 			{
-				Debug.Log("Pressed E");
 				camera.transform.Rotate(-Vector3.up * 90 * Time.deltaTime, Space.World);
 				target = null;
 			}

@@ -14,4 +14,19 @@ public class DragDropSystem_wrapper : MonoBehaviour
 		MainLoop.callAppropriateSystemMethod ("DragDropSystem", "onlyPositiveInteger", input);
 	}
 
+	public void readConsole(System.String s)
+	{
+		MainLoop.callAppropriateSystemMethod ("DragDropSystem", "readConsole", s);
+	}
+
+	public void updateConsole()
+	{
+		MainLoop.callAppropriateSystemMethod ("DragDropSystem", "updateConsole", null);
+	}
+
+	public void consolemanager()
+	{
+		MainLoop.callAppropriateSystemMethod ("DragDropSystem", "consolemanager", null);
+	}
+
 }

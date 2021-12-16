@@ -310,7 +310,7 @@ public class UISystem : FSystem {
 	}
 
 	//Recursive script destroyer
-	private void destroyScript(GameObject go,  bool refund = false){
+	public void destroyScript(GameObject go,  bool refund = false){
 		if(go.GetComponent<UIActionType>() != null){
 			if(!refund)
 				gameData.totalActionBloc++;
