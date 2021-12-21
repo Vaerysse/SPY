@@ -19,6 +19,71 @@ public class LevelGenerator : FSystem {
 	private GameData gameData;
 	private GameObject scriptContainer;
 
+	//List de dictionaire qui continient le niveau généré procéduralement. Chaque Dictionaire est un noeud qui contient une liste de int (cordonées de la case + nom noeud parent) et a comme clef son nom
+	private List<Case> pathLevel = new List<Case>();
+	//On doit aussi noter les murs pour la création des murs
+	private List<Case> wallLevel = new List<Case>();
+
+	//Classe Case 
+	//Elle permet d'avoir toutes les informations d'une case lors de la création de niveau procédural
+	//Fonctionne comme un systéme de noeud
+	//Chaque case à un parent qui est la case créer juste avant elle à lequelle elle est rataché
+	//Un seul parent mais plusieurs enfants possible
+	//Le parent est à zéro pour tous objet qui n'est pas une case ou la case start
+	private class Case
+    {
+		string name; //Nom de la case, par défaut son numéro hiérarchique mais peux changer de nom si besoin (comme par exemple la case de départ appeller start)
+		int hierarchyPosition; //Ca position dans la hiérarchie
+		int parent; //Le numéro hiérarchique du parent
+		List<int> pos; //Coordonnée X et Y de la case
+
+		public Case(string n, int i, int p, List<int> coord)
+        {
+			this.name = n;
+			this.hierarchyPosition = i;
+			this.parent = p;
+			this.pos = coord;
+		}
+
+		//vérifi si lees ccoordonée sont les même on non
+		//retourn False si ce n'est pas le cas
+		public bool sameCoord(List<int> coord)
+        {
+			if (coord[0] == this.pos[0] && coord[1] == this.pos[1])
+            {
+				return true;
+            }
+            else{
+				return false;
+			}
+        }
+
+		//renvoie le nom de la case
+		public string getName()
+        {
+			return this.name;
+        }
+
+		//renvoie les coordonnées de la case
+		public List<int> getCoord()
+        {
+			return this.pos;
+        }
+
+		//renvoie la position hiérarchique de la case
+		public int getHierachyPosittion()
+        {
+			return this.hierarchyPosition;
+        }
+
+		//renvoi le numéro de parent de la case
+		public int getParent()
+        {
+			return this.parent;
+        }
+	}
+
+
 	public LevelGenerator()
 	{
 		if (Application.isPlaying)
@@ -461,12 +526,370 @@ public class LevelGenerator : FSystem {
 	//Création de niveau auto
 	public void CreateLvlAuto() {
 		Debug.Log("Création niveau auto");
-		createCell(1,1);
-		createCell(1, 2);
-		createCell(2, 2);
-		createWall(2,1);
-		createEntity(1, 1,(Direction.Dir)1, "player", null);
-		createSpawnExit(2, 2, false);
+		//Création du chemin
+		PathCreation();
+		//Ajout du player et de la platforme de teleportation du début
+		StartCreation();
+		//Ajout des murs 
+		WallCreation();
+		//Ajout du spawn de fin
+		EndCreation();
 	}
 
+	//Création d'un chemin automatique selon les différentes variables de difficulté
+	private void PathCreation()
+	{
+		Debug.Log("Génération automatique du chemin");
+
+		// Paramétre de création
+		int lanePourcent = 49; // (à metre entre 99 et 50) 99 si l'on veux de niveaux type couloir, 50 si l'on veux un niveau entiérement en platforme
+
+		// Variable de création
+		int x = 1;
+		int y = 1;
+		bool noX = false; // Permet de refaire une boucle et modifier diretement le Y
+		bool noY = false; // Permet de refaire une boucle et modifier diretement le Y
+		bool createCase = true; // autorise la création d'une case
+		int taillePath = Random.Range(20, 31); // A remplacer par tailleMinPath et tailleMaxPath + 1 (car ne prend pas la derniére valeur A VERIFIER) lorsque que j'ajouterais la gestion de la difficulté
+		Debug.Log(taillePath);
+
+		// On créer et enregistre les informations de la case de départ
+		List<int> startPos = new List<int> { x, y };
+		Case start = new Case("start", 1, 0, startPos);
+		pathLevel.Add(start);
+		createCell(x, y);
+
+		for (int i = 2; i <= taillePath; i++)
+		{
+			// Choisis si la prochaine case sera un déplacement vers l'axe x ou vers l'axe Y
+			int r = Random.Range(0, 2);
+			int r2 = Random.Range(0, 100);
+			//si r = 0 on crer la nouvelle case en changeeant le x
+			if (r == 0)
+			{
+				// si r2 <= lanePourcent et qu'il n'existe pas de case en modifiant les coordonnée avec x+1 et qu'on l'on peux modifier les coordonnées X alors on fait x+1
+				if (r2 <= lanePourcent && voidCase(new List<int> {x + 1, y}) && !noX)
+                {
+					x += 1;
+				}
+                else if(voidCase(new List<int> {x - 1, y}) && !noX) // sinon si il n'existe pas de case en modifiant les coordonnée avec x-1 et qu'on l'on peux modifier les coordonnées X alors on fait x-1
+				{
+					x -= 1;
+				}
+                else // on refait un tour pour passer en y
+                {
+					noX = true;
+					i -= 1;
+					createCase = false;
+				}
+			}
+			else if (!noY) // sinon on change le y si l'on à le droit de modifier le Y
+			{
+				// si r2 <= lanePourcent et qu'il n'existe pas de case en modifiant les coordonnée avec y+1 et qu'on l'on peux modifier les coordonnées Y alors on fait y+1
+				if (r2 <= lanePourcent && voidCase(new List<int> {x, y + 1}) && !noY)
+				{
+					y += 1;
+				}
+				else if (voidCase(new List<int> {x, y - 1}) && !noY) // sinon si il n'existe pas de case en modifiant les coordonnée avec y-1 et qu'on l'on peux modifier les coordonnées Y alors on fait y-1
+				{
+					y -= 1;
+				}
+				else // on refait un tour pour passer en y
+				{
+					noY = true;
+					i -= 1;
+					createCase = false;
+				}
+			}
+
+			// Si les deux coordonées ne peuvent pas être modifiés, il y a un pb A GERER PLUS TARD
+            if (noX && noY)
+            {
+				Debug.Log("Probléme lors de la création procédural");
+			}
+            else if(i == taillePath && createCase) // on créer et enregistre les informations de la derniére case
+			{
+				List<int> casePos = new List<int> { x, y };
+				Case lastCase = new Case("end", i, i - 1, casePos);
+				pathLevel.Add(lastCase);
+				createCell(x, y);
+			}
+			else if (createCase) // sinon on créer et enregistre les informations de la nouvelle case
+			{
+				List<int> casePos = new List<int> { x, y };
+				Case newCase = new Case("case", i, i - 1, casePos);
+				pathLevel.Add(newCase);
+				createCell(x, y);
+
+				// On réinitialise les varibale de test de position avant la prochaine boucle
+				noX = false;
+				noY = false;
+			}
+            else
+            {
+				// On réinitialise les varibale de test de position avant la prochaine boucle
+				noX = false;
+				noY = false;
+				createCase = true;
+			}
+
+		}
+		Debug.Log(pathLevel);
+
+	}
+
+	// Parcourt le list de pathLevel afin dd définir si il éxiste une casee sur les mêmes coordonées int x, int y
+	private bool voidCase(List <int> coor) {
+
+		foreach(Case item in pathLevel)
+        {
+			// Si les coordonnées sont déjà occupé par une case
+			if (item.sameCoord(coor)){
+				return false;
+			}
+        }
+		// Sinon aucunee case n'occupe ses coordonnées donc ok pour nouvelle case
+		return true;
+	}
+
+	//Place le player et le platforme de téléportation sur la case de départ
+	private void StartCreation()
+    {
+		List<int> start = new List<int>();
+		bool creation = false;
+
+		//On cherche la case de départ
+		foreach (Case item in pathLevel)
+		{
+			// Si les coordonnées sont déjà occupé par une case
+			if (item.getName() == "start")
+			{
+				start = item.getCoord();
+				creation = true;
+				break;
+			}
+		}
+
+        //Si on a bien trouvé la case start
+        if (creation)
+        {
+			// Création du player
+			createEntity(start[0], start[1], (Direction.Dir)1, "player", null);
+			// Création de la platform de téléportation bleu
+			createSpawnExit(start[0], start[1], true);
+		}
+        else
+        {
+			Debug.Log("Case start introuvable");
+        }
+
+	}
+
+	//Crée les murs qui entours le niveau
+	public void WallCreation()
+    {
+		// Regarde les 8 positions autours de chaque case du niveau générer
+		// Si la ccase testé autour est vide, crée un mur sinon ne fait rien
+		foreach (Case item in pathLevel)
+		{
+			List<int> coord = item.getCoord();
+			bool nord = true;
+			bool nordEst = true;
+			bool est = true;
+			bool sudEst = true;
+			bool sud = true;
+			bool sudOuest = true;
+			bool ouest = true;
+			bool nordOuest = true;
+
+
+			//On test si une case est présente sur l'une des coordonées autour
+			foreach (Case item2 in pathLevel)
+			{
+				// Nord
+				if (item2.sameCoord(new List<int> { coord[0], coord[1] - 1 }))
+				{
+					nord = false;
+				}
+				//Nord Est
+				if (item2.sameCoord(new List<int> { coord[0] + 1, coord[1] - 1 }))
+				{
+					nordEst = false;
+				}
+				//Est
+				if (item2.sameCoord(new List<int> { coord[0] + 1, coord[1] }))
+				{
+					est = false;
+				}
+				//Sud Est
+				if (item2.sameCoord(new List<int> { coord[0] + 1, coord[1] + 1 }))
+				{
+					sudEst = false;
+				}
+				//Sud
+				if (item2.sameCoord(new List<int> { coord[0], coord[1] + 1 }))
+				{
+					sud = false;
+				}
+				//Sud Ouest
+				if (item2.sameCoord(new List<int> { coord[0] - 1, coord[1] + 1 }))
+				{
+					sudOuest = false;
+				}
+				//Ouest
+				if (item2.sameCoord(new List<int> { coord[0] - 1, coord[1]}))
+				{
+					ouest = false;
+				}
+				//Nord Ouest
+				if (item2.sameCoord(new List<int> { coord[0] - 1, coord[1] - 1 }))
+				{
+					nordOuest = false;
+				}
+			}
+			//on fait pareil pour les murs
+			foreach (Case item2 in wallLevel)
+			{
+				// Nord
+				if (item2.sameCoord(new List<int> { coord[0], coord[1] - 1 }))
+				{
+					nord = false;
+				}
+				//Nord Est
+				if (item2.sameCoord(new List<int> { coord[0] + 1, coord[1] - 1 }))
+				{
+					nordEst = false;
+				}
+				//Est
+				if (item2.sameCoord(new List<int> { coord[0] + 1, coord[1] }))
+				{
+					est = false;
+				}
+				//Sud Est
+				if (item2.sameCoord(new List<int> { coord[0] + 1, coord[1] + 1 }))
+				{
+					sudEst = false;
+				}
+				//Sud
+				if (item2.sameCoord(new List<int> { coord[0], coord[1] + 1 }))
+				{
+					sud = false;
+				}
+				//Sud Ouest
+				if (item2.sameCoord(new List<int> { coord[0] - 1, coord[1] + 1 }))
+				{
+					sudOuest = false;
+				}
+				//Ouest
+				if (item2.sameCoord(new List<int> { coord[0] - 1, coord[1] }))
+				{
+					ouest = false;
+				}
+				//Nord Ouest
+				if (item2.sameCoord(new List<int> { coord[0] - 1, coord[1] - 1 }))
+				{
+					nordOuest = false;
+				}
+			}
+
+			//Maintenant on créer les mu ou il faut et les ajoutes a la liste de case pour ne pas en créer plusieurs au même endroit
+			// Nord
+			if (nord)
+			{
+				Case newCase = new Case("wall", 0, 0, new List<int> { coord[0], coord[1] - 1 });
+				wallLevel.Add(newCase);
+				createWall(coord[0], coord[1] - 1);
+			}
+			//Nord Est
+			if (nordEst)
+			{
+				Case newCase = new Case("wall", 0, 0, new List<int> { coord[0] + 1, coord[1] - 1 });
+				wallLevel.Add(newCase);
+				createWall(coord[0] + 1, coord[1] - 1);
+			}
+			//Est
+			if (est)
+			{
+				Case newCase = new Case("wall", 0, 0, new List<int> { coord[0] + 1, coord[1] });
+				wallLevel.Add(newCase);
+				createWall(coord[0] + 1, coord[1]);
+			}
+			//Sud Est
+			if (sudEst)
+			{
+				Case newCase = new Case("wall", 0, 0, new List<int> { coord[0] + 1, coord[1] + 1 });
+				wallLevel.Add(newCase);
+				createWall(coord[0] + 1, coord[1] + 1);
+			}
+			//Sud
+			if (sud)
+			{
+				Case newCase = new Case("wall", 0, 0, new List<int> { coord[0], coord[1] + 1 });
+				wallLevel.Add(newCase);
+				createWall(coord[0], coord[1] + 1);
+			}
+			//Sud Ouest
+			if (sudOuest)
+			{
+				Case newCase = new Case("wall", 0, 0, new List<int> { coord[0] - 1, coord[1] + 1 });
+				wallLevel.Add(newCase);
+				createWall(coord[0] - 1, coord[1] + 1);
+			}
+			//Ouest
+			if (ouest)
+			{
+				Case newCase = new Case("wall", 0, 0, new List<int> { coord[0] -1 , coord[1]});
+				wallLevel.Add(newCase);
+				createWall(coord[0] - 1, coord[1]);
+			}
+			//Nord Ouest
+			if (nordOuest)
+			{
+				Case newCase = new Case("wall", 0, 0, new List<int> { coord[0] - 1, coord[1] - 1 });
+				wallLevel.Add(newCase);
+				createWall(coord[0] - 1, coord[1] - 1);
+			}
+
+			//On réinitialise les variables
+			nord = true;
+			nordEst = true;
+			est = true;
+			sudEst = true;
+			sud = true;
+			sudOuest = true;
+			ouest = true;
+			nordOuest = true;
+		}
+	}
+
+	//Créer la platform de fin à la fin du niveau
+	public void EndCreation()
+    {
+		bool endCase = false;
+		List<int> coord = new List<int>();
+		
+		// On parcourt l'ensemblee des cases
+		foreach (Case item in pathLevel)
+        {
+			// si la case est marquer comme case final
+			if(item.getName() == "end")
+            {
+				// alors on enregistre les coordonées
+				coord = item.getCoord();
+				endCase = true;
+				break;
+			}
+        }
+
+        // Si on a bien enregistré les coodronées de la case final
+        if (endCase)
+        {
+			// on créer le spawn final
+			createSpawnExit(coord[0], coord[1], false);
+		}
+        else // sinon il y a un probléme car pas de case final
+        {
+			Debug.Log("Case final introuvable!");
+        }
+	}
 }
