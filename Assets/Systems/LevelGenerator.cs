@@ -23,6 +23,13 @@ public class LevelGenerator : FSystem {
 	private List<Case> pathLevel = new List<Case>();
 	//On doit aussi noter les murs pour la création des murs
 	private List<Case> wallLevel = new List<Case>();
+	// Nombre de corridor créer
+	int nbCorridor = 0;
+	// Nombre de case seul créer
+	int nbCaseLonely = 0;
+	// Nombre de room créer
+	int nbRoom = 0;
+
 
 	//Classe Case 
 	//Elle permet d'avoir toutes les informations d'une case lors de la création de niveau procédural
@@ -33,15 +40,15 @@ public class LevelGenerator : FSystem {
 	private class Case
     {
 		string name; //Nom de la case, par défaut son numéro hiérarchique mais peux changer de nom si besoin (comme par exemple la case de départ appeller start)
-		int hierarchyPosition; //Ca position dans la hiérarchie
-		int parent; //Le numéro hiérarchique du parent
+		int nbStruct; // A quel structure la case appartient
+		int pathPosition; //Le numéro hiérarchique dans le chemin le plus cours
 		List<int> pos; //Coordonnée X et Y de la case
 
-		public Case(string n, int i, int p, List<int> coord)
+		public Case(string n, int nb, int p, List<int> coord)
         {
 			this.name = n;
-			this.hierarchyPosition = i;
-			this.parent = p;
+			this.nbStruct = nb;
+			this.pathPosition = p;
 			this.pos = coord;
 		}
 
@@ -58,7 +65,7 @@ public class LevelGenerator : FSystem {
 			}
         }
 
-		//renvoie le nom de la case
+		//renvoie le nom de la case (nom de la struc à l'aquel elle appartient)
 		public string getName()
         {
 			return this.name;
@@ -70,17 +77,24 @@ public class LevelGenerator : FSystem {
 			return this.pos;
         }
 
-		//renvoie la position hiérarchique de la case
-		public int getHierachyPosittion()
+		//renvoie a quel numéro de struct elle apartientt
+		public int getnbStruct()
         {
-			return this.hierarchyPosition;
+			return this.nbStruct;
         }
 
-		//renvoi le numéro de parent de la case
-		public int getParent()
+		//renvoi le numéro de position dans le cghemin le plus court
+		public int getPathPosition()
         {
-			return this.parent;
+			return this.pathPosition;
         }
+
+		// Permet de changer la position de la case dans le chemin opti
+		public void setPathPosition(int nb)
+        {
+			this.pathPosition = nb;
+
+		}
 	}
 
 
@@ -537,105 +551,60 @@ public class LevelGenerator : FSystem {
 	}
 
 	//Création d'un chemin automatique selon les différentes variables de difficulté
-	private void PathCreation()
-	{
+	public void PathCreation()
+    {
 		Debug.Log("Génération automatique du chemin");
-
-		// Paramétre de création
-		int lanePourcent = 49; // (à metre entre 99 et 50) 99 si l'on veux de niveaux type couloir, 50 si l'on veux un niveau entiérement en platforme
 
 		// Variable de création
 		int x = 1;
 		int y = 1;
-		bool noX = false; // Permet de refaire une boucle et modifier diretement le Y
-		bool noY = false; // Permet de refaire une boucle et modifier diretement le Y
-		bool createCase = true; // autorise la création d'une case
-		int taillePath = Random.Range(20, 31); // A remplacer par tailleMinPath et tailleMaxPath + 1 (car ne prend pas la derniére valeur A VERIFIER) lorsque que j'ajouterais la gestion de la difficulté
+		int pathPos = 1;
+
+		int taillePath = Random.Range(20, 101); // A remplacer par tailleMinPath et tailleMaxPath + 1 (car ne prend pas la derniére valeur A VERIFIER) lorsque que j'ajouterais la gestion de la difficulté
 		Debug.Log(taillePath);
 
 		// On créer et enregistre les informations de la case de départ
 		List<int> startPos = new List<int> { x, y };
-		Case start = new Case("start", 1, 0, startPos);
+		Case start = new Case("start", 1, pathPos, startPos);
 		pathLevel.Add(start);
 		createCell(x, y);
 
-		for (int i = 2; i <= taillePath; i++)
-		{
-			// Choisis si la prochaine case sera un déplacement vers l'axe x ou vers l'axe Y
-			int r = Random.Range(0, 2);
-			int r2 = Random.Range(0, 100);
-			//si r = 0 on crer la nouvelle case en changeeant le x
-			if (r == 0)
-			{
-				// si r2 <= lanePourcent et qu'il n'existe pas de case en modifiant les coordonnée avec x+1 et qu'on l'on peux modifier les coordonnées X alors on fait x+1
-				if (r2 <= lanePourcent && voidCase(new List<int> {x + 1, y}) && !noX)
-                {
-					x += 1;
-				}
-                else if(voidCase(new List<int> {x - 1, y}) && !noX) // sinon si il n'existe pas de case en modifiant les coordonnée avec x-1 et qu'on l'on peux modifier les coordonnées X alors on fait x-1
-				{
-					x -= 1;
-				}
-                else // on refait un tour pour passer en y
-                {
-					noX = true;
-					i -= 1;
-					createCase = false;
-				}
-			}
-			else if (!noY) // sinon on change le y si l'on à le droit de modifier le Y
-			{
-				// si r2 <= lanePourcent et qu'il n'existe pas de case en modifiant les coordonnée avec y+1 et qu'on l'on peux modifier les coordonnées Y alors on fait y+1
-				if (r2 <= lanePourcent && voidCase(new List<int> {x, y + 1}) && !noY)
-				{
-					y += 1;
-				}
-				else if (voidCase(new List<int> {x, y - 1}) && !noY) // sinon si il n'existe pas de case en modifiant les coordonnée avec y-1 et qu'on l'on peux modifier les coordonnées Y alors on fait y-1
-				{
-					y -= 1;
-				}
-				else // on refait un tour pour passer en y
-				{
-					noY = true;
-					i -= 1;
-					createCase = false;
-				}
-			}
+		int randElement = Random.Range(0, 1); // a modifier selon le nombre d'ellement
+		Debug.Log("randElement : " + randElement);
 
-			// Si les deux coordonées ne peuvent pas être modifiés, il y a un pb A GERER PLUS TARD
-            if (noX && noY)
+		int cpt = 0;
+		while(pathPos < taillePath && cpt< 100)
+        {
+			randElement = Random.Range(0, 1); // a modifier selon le nombre d'ellement
+			/*
+			// Si on fait 0 on créer un couloir
+			if (randElement == 0)
             {
-				Debug.Log("Probléme lors de la création procédural");
+				pathPos = CorridorCreation(x, y, pathPos, taillePath - pathPos);
 			}
-            else if(i == taillePath && createCase) // on créer et enregistre les informations de la derniére case
-			{
-				List<int> casePos = new List<int> { x, y };
-				Case lastCase = new Case("end", i, i - 1, casePos);
-				pathLevel.Add(lastCase);
-				createCell(x, y);
-			}
-			else if (createCase) // sinon on créer et enregistre les informations de la nouvelle case
-			{
-				List<int> casePos = new List<int> { x, y };
-				Case newCase = new Case("case", i, i - 1, casePos);
-				pathLevel.Add(newCase);
-				createCell(x, y);
 
-				// On réinitialise les varibale de test de position avant la prochaine boucle
-				noX = false;
-				noY = false;
+			foreach (Case item in pathLevel)
+			{
+				if (item.getPathPosition() == pathPos)
+				{
+					x = item.getCoord()[0];
+					y = item.getCoord()[1];
+				}
 			}
-            else
+			*/
+			pathPos = RoomCreation(x, y, pathPos, taillePath - pathPos);
+
+
+			foreach (Case item in pathLevel)
             {
-				// On réinitialise les varibale de test de position avant la prochaine boucle
-				noX = false;
-				noY = false;
-				createCase = true;
-			}
-
+				if(item.getPathPosition() == pathPos)
+                {
+					x = item.getCoord()[0];
+					y = item.getCoord()[1];
+				}
+            }
+			cpt += 1;
 		}
-		Debug.Log(pathLevel);
-
 	}
 
 	// Parcourt le list de pathLevel afin dd définir si il éxiste une casee sur les mêmes coordonées int x, int y
@@ -892,4 +861,305 @@ public class LevelGenerator : FSystem {
 			Debug.Log("Case final introuvable!");
         }
 	}
+
+	//Création couloir
+	// Retourne le numéro de path de la derniére case créer
+	// avant de créer le couloir, on ve regarder si toutes les cases sont libres, sinon deux cas de figure
+	// si le couloir ne fait pas au moins 2 cases de distance, alors nepas le créer et renvoyé le numéro de path de la case en cours
+	// si le couloir ne peux pas antienrément être créeer, s'arétté avant
+	public int CorridorCreation(int coordx, int coordy, int pathPos, int resteNbCase)
+    {
+		Debug.Log("Création d'un couloir");
+
+		int x = coordx;
+		int y = coordy;
+		bool sizeMax = true;
+		string orientation = "";
+		int sizeCorridorTemps = 0;
+		int r = Random.Range(0, 4);
+		if(resteNbCase > 5)
+        {
+			sizeCorridorTemps = Random.Range(2, 6);
+		}
+        else
+        {
+			sizeCorridorTemps = Random.Range(2, resteNbCase);
+
+		}
+		int sizeCorridor = 0;
+
+		if (r == 0)
+        {
+			orientation = "nord";
+			//test de toutes la longeur du couloir
+			for (int i = 1; i <= sizeCorridorTemps + 1; i++)
+			{
+				//si une case n'est pas libre sur la trajectoir de construction
+				if (!voidCase(new List<int> { x, y - i }))
+				{
+					//si le couloir fait moins de 2 cases, on annule la construction (on controle jusqu'é la case 3 pour éviter une fusion avec un salle annexe)
+                    if (i <= 3)
+                    {
+						return pathPos;
+					}
+                    else
+                    {
+						sizeCorridor = i - 2;
+						sizeMax = false;
+					}
+				}
+			}
+		}
+		else if(r == 1)
+        {
+			orientation = "est";
+			//test de toutes la longeur du couloir
+			for (int i = 1; i <= sizeCorridorTemps + 1; i++)
+			{
+				//si une case n'est pas libre sur la trajectoir de onstruction
+				if (!voidCase(new List<int> { x + i, y }))
+				{
+					//si le couloir fait moins dde 2 cases, on annule la construction (on controle jusqu'é la case 3 pour éviter une fusion avec un salle annexe)
+					if (i <= 3)
+					{
+						return pathPos;
+					}
+					else
+					{
+						sizeCorridor = i - 2;
+						sizeMax = false;
+					}
+				}
+			}
+		}
+		else if (r == 2)
+        {
+			orientation = "sud";
+			//test de toutes la longeur du couloir
+			for (int i = 1; i <= sizeCorridorTemps + 1; i++)
+			{
+				//si une case n'est pas libre sur la trajectoir de onstruction
+				if (!voidCase(new List<int> { x, y + i }))
+				{
+					//si le couloir fait moins dde 2 cases, on annule la construction (on controle jusqu'é la case 3 pour éviter une fusion avec un salle annexe)
+					if (i <= 3)
+					{
+						return pathPos;
+					}
+					else
+					{
+						sizeCorridor = i - 2;
+						sizeMax = false;
+					}
+				}
+			}
+		}
+        else
+        {
+			orientation = "ouest";
+			//test de toutes la longeur du couloir
+			for (int i = 1; i <= sizeCorridorTemps + 1; i++)
+			{
+				//si une case n'est pas libre sur la trajectoir de onstruction
+				if (!voidCase(new List<int> { x - i, y }))
+				{
+					//si le couloir fait moins de 2 cases, on annule la construction (on controle jusqu'é la case 3 pour éviter une fusion avec un salle annexe)
+					if (i <= 3)
+					{
+						return pathPos;
+					}
+					else
+					{
+						sizeCorridor = i - 2;
+						sizeMax = false;
+					}
+				}
+			}
+		}
+
+		//Si Pas de soucis sur les tests de postions du couloir, alors construire le couloir de taille max
+        if (sizeMax)
+        {
+			sizeCorridor = sizeCorridorTemps;
+
+		}
+
+		if(orientation != "")
+        {
+			nbCorridor += 1;
+		}
+
+		int lastPosition = pathPos;
+
+		for (int i = 1; i <= sizeCorridor; i++)
+        {
+            if (orientation == "nord")
+            {
+				Case newCase = new Case("corridor", nbCorridor, pathPos + i, new List<int> { x, y - i });
+				pathLevel.Add(newCase);
+				createCell(x, y - i);
+			}
+			else if(orientation == "est")
+            {
+				Case newCase = new Case("corridor", nbCorridor, pathPos + i, new List<int> { x + i, y });
+				pathLevel.Add(newCase);
+				createCell(x + i, y );
+			}
+			else if(orientation == "sud")
+            {
+				Case newCase = new Case("corridor", nbCorridor, pathPos + i, new List<int> { x, y + i });
+				pathLevel.Add(newCase);
+				createCell(x, y + i);
+			}
+			else if(orientation == "ouest")
+            {
+				Case newCase = new Case("corridor", nbCorridor, pathPos + i, new List<int> { x - i, y });
+				pathLevel.Add(newCase);
+				createCell(x - i, y);
+			}
+            else
+            {
+				Debug.Log("Erreure lors du choix d'orintation du couloir!");
+				return lastPosition;
+			}
+			lastPosition = pathPos + i;
+		}
+		return lastPosition;
+	}
+
+	//Création d'une piece
+	public int RoomCreation(int coordx, int coordy, int pathPos, int resteNbCase)
+    {
+		Debug.Log("Création d'une salle");
+		Debug.Log("Path pos : [" + coordx + ", " + coordy + "]");
+
+		int largeur = Random.Range(3, 5);
+		int longeur = Random.Range(3, 5);
+		Debug.Log("Largeur : " + largeur);
+		Debug.Log("Longeur : " + longeur);
+
+		bool positionnementOK = false;
+		string orientation = "";
+		int newPathPos = pathPos;
+
+		int rEnter = 0;
+		int rExit = 0;
+
+
+		int cpt = 0;
+		//On cherche une place ou créer la salle
+        while(!positionnementOK && cpt < 100)
+		{
+
+			int r = Random.Range(0, 4);
+			// Nord
+			if(r == 0)
+            {
+				Debug.Log("On va tester au nord");
+
+				rEnter = Random.Range(1, largeur);
+				bool isOk = true;
+				// On parcours l'espace que peux occupe la salle on faisant aussi glisser l'espace sur l'axe des x afin de noté qu'elle sont les entrés possible de la salle
+				for (int newx = coordx - rEnter; newx <= coordx + (largeur - rEnter) + 1; newx++)
+				{
+					for (int newy = coordy - longeur - 1; newy <= coordy; newy++)
+					{
+						// Si il n'y a rien sur la case et que les coordonées tester ne sont pas ceux de la case de départ
+						if(!voidCase(new List<int> { newx, newy }) && isOk && coordx != newx && coordy != newy)
+                        {
+							isOk = false;
+						}
+					}
+				}
+
+                if (isOk)
+                {
+					positionnementOK = true;
+					orientation = "nord";
+					Debug.Log("On va au nord");
+				}
+			}
+			else if(r == 1) // Est
+            {
+				Debug.Log("On va tester a l'est");
+
+				rEnter = Random.Range(1, longeur);
+				bool isOk = true;
+				// On parcours l'espace que peux occupe la salle on faisant aussi glisser l'espace sur l'axe des x afin de noté qu'elle sont les entrés possible de la salle
+				for (int newx = coordx; newx <= coordx + largeur + 1; newx++)
+				{
+					for (int newy = coordy - rEnter; newy <= coordy + (longeur - rEnter) + 1; newy++)
+					{
+						// Si il n'y a rien sur la case et que lees coordonée tester ne sont pas ceux de la case de départ
+						if (!voidCase(new List<int> { newx, newy }) && isOk && coordx == newx && coordy == newy)
+						{
+							isOk = false;
+						}
+					}
+				}
+
+				if (isOk)
+				{
+					positionnementOK = true;
+					orientation = "est";
+					Debug.Log("On va a l'est");
+				}
+			}
+			else if(r == 2) // Sud
+            {
+				Debug.Log("On va tester au sud");
+			}
+			else if(r == 3) // Ouest
+            {
+				Debug.Log("On va tester au Ouest");
+			}
+            else
+            {
+				Debug.Log("Probléme recherche orientation création salle r = " + r);
+				return pathPos;
+			}
+			cpt += 1;
+		}
+
+        //Si ok, on créer la salle à la bonne position
+        if (positionnementOK)
+        {
+			nbRoom += 1;
+			//si au nord
+			if (orientation == "nord")
+            {
+				for (int newx = coordx - rEnter + 1; newx <= coordx + (largeur - rEnter); newx++)
+				{
+					for (int newy = coordy - longeur; newy <= coordy - 1; newy++)
+					{
+						Debug.Log("Création case en  : [" + newx + ", " + newy + "]");
+						Case newCase = new Case("room", nbRoom, 0, new List<int> { newx, newy });
+						pathLevel.Add(newCase);
+						createCell(newx, newy);
+					}
+				}
+
+				//définir case de sortie
+				rExit = Random.Range(1, largeur);
+				foreach (Case item in pathLevel)
+				{
+					//On a trouver la case de sortie
+					if(item.getCoord()[0] == coordx - (rEnter - rExit) && item.getCoord()[1] == coordy + longeur)
+                    {
+						Debug.Log("Nouveau path position");
+						newPathPos = pathPos + 1;
+						item.setPathPosition(newPathPos);
+					}
+                }
+
+
+			}
+
+			//on met a jour les info des cases du chemin
+
+        }
+
+		return newPathPos;
+	}
+
 }
