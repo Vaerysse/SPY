@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+ <enemy posX="1" posZ="1" direction="2" range="1" selfRange="False" typeRange="0">
+   <script>
+     <action actionType="Forever">
+       <action actionType="Wait"/>
+       <action actionType="Wait"/>
+       <action actionType="TurnLeft"/>
+       <action actionType="Wait"/>
+       <action actionType="Wait"/>
+       <action actionType="TurnRight"/>
+     </action>
+   </script>
+ </enemy>

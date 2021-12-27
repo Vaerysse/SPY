@@ -23,6 +23,8 @@ public class LevelGenerator : FSystem {
 	private List<Case> pathLevel = new List<Case>();
 	//On doit aussi noter les murs pour la création des murs
 	private List<Case> wallLevel = new List<Case>();
+	//On doit aussi noter les murs pour la création des murs
+	private List<Case> gateAndTermLevel = new List<Case>();
 	// Nombre de corridor créer
 	int nbCorridor = 0;
 	// Nombre de case seul créer
@@ -291,7 +293,7 @@ public class LevelGenerator : FSystem {
 	}
 
 	public void XmlToLevel(string fileName){
-
+		Debug.Log("path name for xml : " + fileName);
 		gameData.totalActionBloc = 0;
 		gameData.totalStep = 0;
 		gameData.totalExecute = 0;
@@ -394,6 +396,7 @@ public class LevelGenerator : FSystem {
 			List<GameObject> script = new List<GameObject>();
 			foreach(XmlNode actionNode in scriptNode.ChildNodes){
 				script.Add(readXMLAction(actionNode, editable));
+				Debug.Log("script : " + readXMLAction(actionNode, editable));
 			}
 
 			return script;			
@@ -549,6 +552,14 @@ public class LevelGenerator : FSystem {
 	public void CreateLvlAuto() {
 		Debug.Log("Création niveau auto");
 		//Variable pour la création
+		gameData.totalActionBloc = 0;
+		gameData.totalStep = 0;
+		gameData.totalExecute = 0;
+		gameData.totalCoin = 0;
+		gameData.levelToLoadScore = null;
+		gameData.dialogMessage = new List<(string, string)>();
+		gameData.actionBlocLimit = new Dictionary<string, int>();
+		map = new List<List<int>>();
 		bool gateCreate = false;
 		bool robotCreate = false;
 
@@ -563,15 +574,22 @@ public class LevelGenerator : FSystem {
 			gateCreate = GateCreation();
 		}
 		//ajout des robots
-		robotCreate = RobotCréation();
+		int rNbRobot = Random.Range(1, nbRoom);
+		for (int i = 1; i <= rNbRobot; i++)
+		{
+			robotCreate = RobotCreation();
+		}
 		//Ajout des murs 
 		WallCreation();
 		//Ajout du spawn de fin
 		EndCreation();
+
+		//pour les vérifictions
+		vericationPath();
 	}
 
 	//Création d'un chemin automatique selon les différentes variables de difficulté
-	public void PathCreation()
+	private void PathCreation()
     {
 		Debug.Log("Génération automatique du chemin");
 
@@ -579,7 +597,6 @@ public class LevelGenerator : FSystem {
 		int x = 1;
 		int y = 1;
 		int pathPos = 1;
-		bool gate = false;
 
 		int taillePath = Random.Range(20, 201); // A remplacer par tailleMinPath et tailleMaxPath + 1 (car ne prend pas la derniére valeur A VERIFIER) lorsque que j'ajouterais la gestion de la difficulté
 		Debug.Log(taillePath);
@@ -676,7 +693,7 @@ public class LevelGenerator : FSystem {
 	}
 
 	//Crée les murs qui entours le niveau
-	public void WallCreation()
+	private void WallCreation()
     {
 		// Regarde les 8 positions autours de chaque case du niveau générer
 		// Si la ccase testé autour est vide, crée un mur sinon ne fait rien
@@ -853,7 +870,7 @@ public class LevelGenerator : FSystem {
 	}
 
 	//Créer la platform de fin à la fin du niveau
-	public void EndCreation()
+	private void EndCreation()
     {
 		bool endCase = false;
 		List<int> coord = new List<int>();
@@ -888,7 +905,7 @@ public class LevelGenerator : FSystem {
 	// avant de créer le couloir, on ve regarder si toutes les cases sont libres, sinon deux cas de figure
 	// si le couloir ne fait pas au moins 2 cases de distance, alors nepas le créer et renvoyé le numéro de path de la case en cours
 	// si le couloir ne peux pas antienrément être créeer, s'arétté avant
-	public int CorridorCreation(int coordx, int coordy, int pathPos, int resteNbCase)
+	private int CorridorCreation(int coordx, int coordy, int pathPos, int resteNbCase)
     {
 		Debug.Log("Création d'un couloir");
 
@@ -1068,7 +1085,7 @@ public class LevelGenerator : FSystem {
 	// Avant de créer la salle, on tcheck si on pet la metre à l'endroit désiré
 	// Si on ne peux pas, on relance une boucle pour tirer au hasard une nouvelle position
 	// si au bout d'un certain nombre d'essais on ne peut toujours pas placer de salle, alors on abandonne l'idée dans faire une une
-	public int RoomCreation(int coordx, int coordy, int pathPos, int resteNbCase)
+	private int RoomCreation(int coordx, int coordy, int pathPos, int resteNbCase)
     {
 		Debug.Log("Création d'une piéce");
 
@@ -1315,7 +1332,7 @@ public class LevelGenerator : FSystem {
 	}
 
 	// Compare deux coordonées
-	public bool EqualCoordinate(int x1, int y1, int x2, int y2) 
+	private bool EqualCoordinate(int x1, int y1, int x2, int y2) 
 	{ 
 		if(x1 == x2 && y1 == y2)
 		{
@@ -1333,7 +1350,7 @@ public class LevelGenerator : FSystem {
 	// détermine si on peux mettre un terminal avant
 	// Si oui place les deux éléments et renvoie true
 	// sinon renvoie false
-	public bool GateCreation()
+	private bool GateCreation()
     {
 		Debug.Log("Création d'une porte et d'un terminal");
 
@@ -1345,7 +1362,6 @@ public class LevelGenerator : FSystem {
         }
 		// On tire un numéro de couloir au hasard
 		int r = Random.Range(1, nbCorridor + 1);
-		Debug.Log("Num couloir : " + r);
 
 		// On tire la position de la porte dans se couloir au hasard
 		// Pour commencer on détermine quel séquence de position détermine les cases du couloir
@@ -1365,7 +1381,6 @@ public class LevelGenerator : FSystem {
         }
 		//On tire ensuite au hasard une position dans le couloir (au moins position 2 pour avoir la place de placer le terminal dans la case d'avant)
 		int rGatePos = Random.Range(numCaseStart + 1, numCaseEnd); // On ne prend pas la derniére case pour ne pas se retrouvé dans un angle
-		Debug.Log("Num position pour gate : " + rGatePos);
 		//On determine ensuite la position du terminal
 		int rTermPos = 1;
 		if (rGatePos > 5)
@@ -1376,7 +1391,6 @@ public class LevelGenerator : FSystem {
         {
 			rTermPos = Random.Range(1, rGatePos);
 		}
-		Debug.Log("Num position pour terminal : " + rTermPos);
 		if (rGatePos <= rTermPos)
         {
 			Debug.Log("Couloir trop petit");
@@ -1410,14 +1424,29 @@ public class LevelGenerator : FSystem {
 			}
         }
 
+		// On verifie avant qu'il n'y a pas déjà une gate ou un terminal à cette endroit
+		foreach(Case item in gateAndTermLevel)
+        {
+            if (EqualCoordinate(item.getCoord()[0], item.getCoord()[1], coordGate[0], coordGate[1]) || EqualCoordinate(item.getCoord()[0], item.getCoord()[1], coordTerminal[0], coordTerminal[1]))
+            {
+				return false;
+            }
+        }
+
 		createDoor(coordGate[0], coordGate[1], (Direction.Dir)int.Parse(corridorOrientationGate(coordNextCaseGate[0], coordGate[0])), nbGate);
 		createActivable(coordTerminal[0], coordTerminal[1], new List<int> { nbGate }, (Direction.Dir)int.Parse(corridorOrientationTerminal(coordTerminal[0], coordTerminal[1], rTermPos)));
+
+		// On ajoute les deux éléments à la liste des gateAndTerminal
+		Case newElement = new Case("gate", nbGate, 0, coordGate);
+		gateAndTermLevel.Add(newElement);
+		newElement = new Case("terminal", nbGate, 0, coordTerminal);
+		gateAndTermLevel.Add(newElement);
 
 		return true;
     }
 
 	// Determine l'orientation que doit prendre une gate
-	public string corridorOrientationGate(int x1, int x2)
+	private string corridorOrientationGate(int x1, int x2)
     {
 		if(x1 != x2)
         {
@@ -1429,15 +1458,15 @@ public class LevelGenerator : FSystem {
 		}
     }
 
-    // Determine l'orientation que doit prendre un terminal
-	public string corridorOrientationTerminal(int x, int y, int pathPos)
+	// Determine l'orientation que doit prendre un terminal
+	private string corridorOrientationTerminal(int x, int y, int pathPos)
     {
 		bool orientationOk = false;
 		List<int> previousCase = new List<int>();
 		List<int> nextCase = new List<int>();
 		if (voidCase(new List<int> { x - 1, y }))
         {
-			return "2";
+			return "3";
         }
 		else if (voidCase(new List<int> { x, y - 1}))
         {
@@ -1445,11 +1474,11 @@ public class LevelGenerator : FSystem {
 		}
 		else if(voidCase(new List<int> { x + 1, y }))
 		{
-			return "4";
+			return "2";
 		}
 		else if(voidCase(new List<int> { x, y + 1}))
 		{
-			return "3";
+			return "4";
 		}
 
 		if (!orientationOk)
@@ -1471,11 +1500,11 @@ public class LevelGenerator : FSystem {
 
 			if (nextCase[0] != previousCase[0])
 			{
-				return "2";
+				return "1";
 			}
 			else
 			{
-				return "1";
+				return "2";
 			}
 		}
 
@@ -1483,10 +1512,118 @@ public class LevelGenerator : FSystem {
     }
 
 	// Met en place un robot
-	// Pour le moment le robot sera placer non loin du chemin et fera des tours sur lui même
-	public bool RobotCréation()
+	// Pour le moment le robot sera placer non loin du chemin dans des rooms et fera des tours sur lui même
+	private bool RobotCreation()
     {
+		Debug.Log("Création Robot");
+
+		//Variable pour la creation d'un robot
+		bool creationOk = false;
+		string orientation = "";
+		List<int> coordRobot = new List<int>();
+
+		//Si pas de salle de créer, pas le peine d'essayer de placer un robot
+		if(nbRoom == 0)
+        {
+			Debug.Log("Pas de salle créer donc pas de robot à placer");
+			return false;
+        }
+
+		//On selectionne une salle au hasard
+		int rRoom = Random.Range(1, nbRoom + 1);
+		//On determine quel sont les cases du chemin
+		List<Case> casePath = new List<Case>();
+        foreach(Case item in pathLevel)
+        {
+			if(item.getName() == "room" && item.getnbStruct() == rRoom && item.getPathPosition() > 0)
+            {
+				casePath.Add(item);
+			}
+        }
+		//On selectionne une case au hasard et on regarde si on peux placer le robot à une case à coté (mais pas sur une autre case du chemin)
+		int rCase = 0;
+		int nbTentative = 0;
+		while(!creationOk && nbTentative < 10)
+        {
+			rCase = Random.Range(1, casePath.Count);
+			nbTentative += 1;
+			if (!voidCase(new List<int> { casePath[rCase].getCoord()[0] + 1, casePath[rCase].getCoord()[1] }) && !EqualePath(new List<int> { casePath[rCase].getCoord()[0] + 1, casePath[rCase].getCoord()[1] }))
+            {
+				creationOk = true;
+				coordRobot.Add(casePath[rCase].getCoord()[0] + 1);
+				coordRobot.Add(casePath[rCase].getCoord()[1]);
+				orientation = "2"; //Doit regarder à l'Ouest
+			}
+			else if (!voidCase(new List<int> { casePath[rCase].getCoord()[0], casePath[rCase].getCoord()[1] + 1 }) && !EqualePath(new List<int> { casePath[rCase].getCoord()[0], casePath[rCase].getCoord()[1] + 1 }))
+			{
+				creationOk = true;
+				coordRobot.Add(casePath[rCase].getCoord()[0]);
+				coordRobot.Add(casePath[rCase].getCoord()[1] + 1);
+				orientation = "4"; //Doit regarder au Nord
+			}
+			else if (!voidCase(new List<int> { casePath[rCase].getCoord()[0] - 1, casePath[rCase].getCoord()[1] }) && !EqualePath(new List<int> { casePath[rCase].getCoord()[0] - 1, casePath[rCase].getCoord()[1] }))
+			{
+				creationOk = true;
+				coordRobot.Add(casePath[rCase].getCoord()[0] - 1);
+				coordRobot.Add(casePath[rCase].getCoord()[1]);
+				orientation = "3"; //Doit regarder à l'Est
+			}
+			else if (!voidCase(new List<int> { casePath[rCase].getCoord()[0], casePath[rCase].getCoord()[1] - 1 }) && !EqualePath(new List<int> { casePath[rCase].getCoord()[0], casePath[rCase].getCoord()[1] - 1 }))
+			{
+				creationOk = true;
+				coordRobot.Add(casePath[rCase].getCoord()[0]);
+				coordRobot.Add(casePath[rCase].getCoord()[1] - 1);
+				orientation = "1"; //Doit regarder au Sud
+			}
+		}
+
+        // Si pas de placage trouvé
+        if (!creationOk)
+        {
+			return false;
+        }
+        else // Sinon on creer l'ennemie
+        {
+			//Debug.Log("item1 : " + gameData.levelToLoad.Item1);
+			//Debug.Log("item2 : " + gameData.levelToLoad.Item2);
+			//Debug.Log("level list : " + gameData.levelList);
+			XmlDocument doc = new XmlDocument();
+			//doc.Load("E:/Unity_project/Assets/StreamingAssets/Levels/generique/DroneRotation.xml");
+			//doc.Load("Assets / StreamingAssets / Levels / Campagne / Niveau 3.xml");
+			//Debug.Log("Script robot chargé");
+			//XmlNode root = doc.ChildNodes[1];
+
+			//createEntity(coordRobot[0], coordRobot[1], (Direction.Dir)int.Parse(orientation), "enemy", readXMLScript(root.ChildNodes[0]));
+			createEntity(coordRobot[0], coordRobot[1], (Direction.Dir)int.Parse(orientation), "enemy");
+			return true;	
+		}
+    }
+
+	// Renvoir true si la case est une case du path
+	private bool EqualePath(List<int> coor)
+    {
+		foreach (Case item in pathLevel)
+		{
+			// Si les coordonnées sont déjà occupé par une case et que c'est une case du path
+			if (item.sameCoord(coor) && item.getPathPosition() > 0)
+			{
+				return true;
+			}
+		}
+		// Sinon pas de case du path sur ces coordonées
 		return false;
+	}
+
+	// Pour les test, permet de vérifier le chemin
+	private void vericationPath()
+    {
+		foreach(Case item in pathLevel)
+        {
+			if(item.getPathPosition() > 0)
+            {
+				createCell(item.getCoord()[0], item.getCoord()[1]);
+            }
+        }
     }
 
 }
