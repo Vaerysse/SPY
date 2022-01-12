@@ -479,6 +479,7 @@ public class DragDropSystem : FSystem
 		}
 
 		//Mouse down
+		// On fait glisser une action selectionner tant que le bouton gauche de la souris est enfoncé
 		if (Input.GetMouseButtonDown(0) && !Input.GetMouseButtonUp(0))
 		{ //focus in play mode (unity editor) could be up and down !!! (bug unity)
 		  //manage click on library

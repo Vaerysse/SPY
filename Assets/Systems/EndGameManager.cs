@@ -11,6 +11,7 @@ public class EndGameManager : FSystem {
     private Family newCurrentAction_f = FamilyManager.getFamily(new AllOfComponents(typeof(CurrentAction), typeof(BasicAction)));
 	private Family exitGO = FamilyManager.getFamily(new AllOfComponents(typeof(Position), typeof(AudioSource)), new AnyOfTags("Exit"));
     private Family endpanel_f = FamilyManager.getFamily(new AllOfComponents(typeof(Image), typeof(AudioSource)), new AnyOfTags("endpanel"));
+	private Family learnerModel = FamilyManager.getFamily(new AllOfComponents(typeof(UserModel))); // Charge les familles model
 	private GameObject endPanel;
 
 	public EndGameManager(){
@@ -53,8 +54,16 @@ public class EndGameManager : FSystem {
 						nbEnd++;
 						// if all players reached end position
 						if (nbEnd >= playerGO.Count)
+						{
 							// trigger end
 							GameObjectManager.addComponent<NewEnd>(endPanel, new { endType = NewEnd.Win });
+							//On met à jour la variable endLevel des UserModel pour déclancher le calcule de la maj du model
+							foreach (GameObject learner in learnerModel)
+                            {
+								learner.GetComponent<UserModel>().endLevel = true;
+
+							}
+						}
 					}
 				}				
 			}				

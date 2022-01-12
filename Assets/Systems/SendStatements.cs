@@ -88,4 +88,16 @@ public class SendStatements : FSystem {
             objectName = "myButton"
         });
     }
+
+    // Lorsque le joueur appuie sur le bouton play
+    public void playLevelActivated()
+    {
+        Debug.Log("play level activated : SendStatements");
+        GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
+        {
+            verb = "interacted",
+            objectType = "menu",
+            objectName = "ExectuteActionList"
+        });
+    }
 }

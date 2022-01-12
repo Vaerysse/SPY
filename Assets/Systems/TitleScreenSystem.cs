@@ -30,6 +30,7 @@ public class TitleScreenSystem : FSystem {
 			backButton = GameObject.Find("Retour");
 			buttonLvlGenerator = GameObject.Find("LvlGenerator");
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("GameData"));
+			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("Learner")); // Permet de garder l'objet contenant la modélisation de l'apprenant entre chaque scéne
 
 			cList = GameObject.Find("CampagneList");
 			levelButtons = new Dictionary<GameObject, List<GameObject>>();

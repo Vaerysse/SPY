@@ -18,6 +18,8 @@ public class LevelGenerator : FSystem {
 	private List<List<int>> map;
 	private GameData gameData;
 	private GameObject scriptContainer;
+	private GameObject model; // modélisation de l'utilisateur
+	GameObject infoLevelGen; // info sur la création procedural du level 
 
 	//List de dictionaire qui continient le niveau généré procéduralement. Chaque Dictionaire est un noeud qui contient une liste de int (cordonées de la case + nom noeud parent) et a comme clef son nom
 	private List<Case> pathLevel = new List<Case>();
@@ -121,6 +123,15 @@ public class LevelGenerator : FSystem {
 			scriptContainer = enemyScript.First();
 			Debug.Log(gameData.levelToLoad.Item1);
 			Debug.Log(gameData.levelToLoad.Item2);
+			infoLevelGen = GameObject.Find("infoLevelGen");
+			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("infoLevelGen"));
+			// Pour les tests
+			infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 4;
+			List<bool> listTest = new List<bool>();
+			listTest.Add(true);
+			listTest.Add(true);
+			listTest.Add(false);
+			infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = listTest;
 			if (gameData.levelToLoad.Item1 != "generique")
 			{
 				XmlToLevel(gameData.levelList[gameData.levelToLoad.Item1][gameData.levelToLoad.Item2]);
