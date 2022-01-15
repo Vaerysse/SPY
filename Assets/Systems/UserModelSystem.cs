@@ -25,11 +25,15 @@ public class UserModelSystem : FSystem {
 		if(Application.isPlaying)
 		{
 			currentLearner = GameObject.Find("Learner");
-			currentLearner.GetComponent<UserModel>().endLevel = false; // Le niveau n'est pas terminé
-			stratTentative();
-			editableContainer = editableScriptContainer_f.First(); // On récupére le container d'action éditable
+			if(editableScriptContainer_f.Count  > 0)
+            {
+				editableContainer = editableScriptContainer_f.First(); // On récupére le container d'action éditable
+			}
 			infoLevelGen = GameObject.Find("infoLevelGen"); // On récupére le gameobject contenant les infos du niveau
 			Debug.Log("nb enfant au début : " + editableContainer.transform.childCount);
+
+			initModelLearner();
+			stratTentative();
 		}
 		instance = this;
 	}
@@ -59,15 +63,26 @@ public class UserModelSystem : FSystem {
 		}
 	}
 
-	public void testModelPresence()
+	// Initialise le model de l'apprenant
+	public void initModelLearner()
     {
-		Debug.Log("testModelPresence taille : " + learnerModel.Count);
-		foreach(GameObject model in learnerModel)
-        {
-			Debug.Log(model.GetComponent<UserModel>().learnerName);
-		}
+		// On réinitialise le level
+		if (infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen)
+		{
+			Debug.Log("Initialisation  du level du model dans la génération de niveau");
+			infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen = false; // pour éviter d'initialiser à chaque fois qu'on recommence le niveau en cours
 
-    }
+			currentLearner.GetComponent<UserModel>().meanLevelTime = 0.0f;
+			currentLearner.GetComponent<UserModel>().timeStart = 0.0f;
+			currentLearner.GetComponent<UserModel>().totalLevelTime = 0.0f;
+			currentLearner.GetComponent<UserModel>().difNbAction = 0;
+			currentLearner.GetComponent<UserModel>().nbTry = 0;
+			currentLearner.GetComponent<UserModel>().endLevel = false;
+			currentLearner.GetComponent<UserModel>().newCompetenceValide = false;
+			currentLearner.GetComponent<UserModel>().newCompetenceValideVector = new List<bool>();
+			currentLearner.GetComponent<UserModel>().levelHardProposition = new List<int>();
+		}
+	}
 
 	// Lorsque dans un niveau l'utilisateur appuie sur play, on calcule le temps mis pour construire la réponse de la tentative
 	// on l'ajoute ensuite au totalLevelTime
@@ -111,8 +126,6 @@ public class UserModelSystem : FSystem {
 	// Effectue les mise à jour pour la modélisation de l'utilisation
 	private void endLevelMajModel()
     {
-		Debug.Log("end level");
-		Debug.Log("nb enfant a la fin : " + editableContainer.transform.childCount);
 
 		// On repasse tous de suite à la variable à false pour éviter des doubles calcules
 		currentLearner.GetComponent<UserModel>().endLevel = false;
@@ -127,7 +140,7 @@ public class UserModelSystem : FSystem {
         {
 			point = 2;
         }
-		else if (currentLearner.GetComponent<UserModel>().nbTry == 2 || currentLearner.GetComponent<UserModel>().nbTry == 2)
+		else if (currentLearner.GetComponent<UserModel>().nbTry == 2 || currentLearner.GetComponent<UserModel>().nbTry == 3)
         {
 			point = 1;
 		}
@@ -135,8 +148,8 @@ public class UserModelSystem : FSystem {
         {
 			point = -1;
 		}
-        // Si le nombre d'écrat d'action et au moins de +20% alors -0.5 point
-        if (currentLearner.GetComponent<UserModel>().difNbAction >= (infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin / 5))
+		// Si le nombre d'écrat d'action et au moins de +20% alors -0.5 point
+		if (currentLearner.GetComponent<UserModel>().difNbAction >= ((float)infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin / 5))
         {
 			point = point - 0.5f;
         }
@@ -149,7 +162,6 @@ public class UserModelSystem : FSystem {
 		// Si le vecteur compétence n'est pas encore présent on l'ajoutedans le suivis de la balance ET dans le dictionnaire de compétence
 		if (!currentLearner.GetComponent<UserModel>().balanceFailWin.ContainsKey(infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence))
 		{
-			Debug.Log("Ajout vector");
 			if(point < 0)
             {
 				point = 0;
@@ -168,15 +180,72 @@ public class UserModelSystem : FSystem {
 				currentLearner.GetComponent<UserModel>().balanceFailWin[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] += point;
 			}
 		}
-		currentLearner.GetComponent<UserModel>().balanceFailWin[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] += point;
+
+		// Si on a travailler qu'une seul compétence, on ne touche pas au niveau de difficulté
+		int nbTrainCompetence = 0;
+		for (int i = 0; i < infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence.Count; i++)
+        {
+            if (infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[i])
+            {
+				nbTrainCompetence += 1;
+			}
+        }
+
+		// Sinon
+		// Si obtenue 2 points, on monte la difficulté
+		// Si obtenue plus de 0 mais moins de 2 on ne change pas
+		// Si obtenue 0 ou moins on baisse la difficulté
+		if (nbTrainCompetence > 1)
+		{
+			if (point >= 2)
+			{
+				// On parcours la liste du vector compétence travaillé et on augmente le niveau de difficulté de toutes les compétences présentes
+				for (int i = 0; i < infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence.Count; i++)
+				{
+					if (infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[i])
+					{
+						currentLearner.GetComponent<UserModel>().levelHardProposition[i] = infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel + 1;
+					}
+				}
+			}
+			else if (point <= 0)
+			{
+				for (int i = 0; i < infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence.Count; i++)
+				{
+					if (infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[i])
+					{
+						// La compétence ne doit pas être en dessous du niveau 1
+						if (currentLearner.GetComponent<UserModel>().levelHardProposition[i] > 1)
+                        {
+							currentLearner.GetComponent<UserModel>().levelHardProposition[i] = infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel - 1;
+						}
+					}
+				}
+			}
+            else
+            {
+				for (int i = 0; i < infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence.Count; i++)
+				{
+					if (infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[i])
+					{
+						currentLearner.GetComponent<UserModel>().levelHardProposition[i] = infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel;
+					}
+				}
+			}
+		}
+
+		Debug.Log("Niveau dificulté : ");
+		Debug.Log(currentLearner.GetComponent<UserModel>().levelHardProposition[0]);
+		Debug.Log(currentLearner.GetComponent<UserModel>().levelHardProposition[1]);
+		Debug.Log(currentLearner.GetComponent<UserModel>().levelHardProposition[2]);
+
 		// On valide une compétence (ou un ensemble de compétence) lorsque le résultat de la balance est à au moins 4
 		if (currentLearner.GetComponent<UserModel>().balanceFailWin[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] >= 4)
         {
-			currentLearner.GetComponent<UserModel>().learningState.Add(infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence, true);
+			Debug.Log("Validation compétence");
+			currentLearner.GetComponent<UserModel>().learningState[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] = true;
+			currentLearner.GetComponent<UserModel>().newCompetenceValideVector = infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence;
+			currentLearner.GetComponent<UserModel>().newCompetenceValide = true;
 		}
-
-		// Envoie trace fin de niveau
-
-		/////   A FAIRE    ////
 	}
 }

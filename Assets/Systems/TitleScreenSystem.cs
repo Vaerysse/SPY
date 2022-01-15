@@ -19,6 +19,10 @@ public class TitleScreenSystem : FSystem {
 	private GameObject cList;
 	private Dictionary<GameObject, List<GameObject>> levelButtons; //key = directory button,  value = list of level buttons
 
+	//Chargement des famille
+	private Family modelLearner = FamilyManager.getFamily(new AnyOfComponents(typeof(UserModel)));
+	private Family infoLevel_F = FamilyManager.getFamily(new AnyOfComponents(typeof(infoLevelGenerator)));
+
 	public TitleScreenSystem(){
 		if (Application.isPlaying)
 		{
@@ -31,6 +35,10 @@ public class TitleScreenSystem : FSystem {
 			buttonLvlGenerator = GameObject.Find("LvlGenerator");
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("GameData"));
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("Learner")); // Permet de garder l'objet contenant la modélisation de l'apprenant entre chaque scéne
+			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("infoLevelGen")); // Permet de garder l'objet contenant les information des niveau scréer procéduralement entre chaque scéne
+			//Initialisation des infomations de suivis de niveau
+			initInfoLevelGen();
+			initModelLearn();
 
 			cList = GameObject.Find("CampagneList");
 			levelButtons = new Dictionary<GameObject, List<GameObject>>();
@@ -188,6 +196,63 @@ public class TitleScreenSystem : FSystem {
 			}
 		}
 	}
+
+	// Initialise le model learner
+	private void initModelLearn()
+    {
+		GameObject model = modelLearner.First();
+		GameObject infoLevelGen = infoLevel_F.First();
+
+		Debug.Log("Initialisation du model");
+		// Si initOk = false, alors c'est le premier chargement du model il faut initialiser les variable concernant l'apprenant en plus de ceux du suivant de l'apprantissage du niveau
+		if (!model.GetComponent<UserModel>().initOk)
+		{
+			Debug.Log("Initialisation  Général du model");
+			model.GetComponent<UserModel>().learnerName = "Test learner";
+
+			List<bool> listLearn = new List<bool>();
+			listLearn.Add(false); // Sequence
+			listLearn.Add(false); // While
+			listLearn.Add(false); // If...Then
+			listLearn.Add(false); // Negation
+			listLearn.Add(false); // Console
+			model.GetComponent<UserModel>().stepLearning = listLearn;
+
+			Dictionary<int, List<int>> followStateLearn = new Dictionary<int, List<int>>();
+			followStateLearn.Add(0, new List<int>()); // Sequence
+			List<int> parent0 = new List<int>();
+			parent0.Add(0);
+			List<int> parent2 = new List<int>();
+			parent2.Add(2);
+			followStateLearn.Add(1, parent0); // While
+			followStateLearn.Add(2, parent0); // If...Then
+			followStateLearn.Add(3, parent2); // Negation
+			followStateLearn.Add(4, parent0); // Console
+			model.GetComponent<UserModel>().followStateLearn = followStateLearn;
+		}
+
+		// On réinitialise le level
+		if (infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen)
+		{
+			Debug.Log("Initialisation  du level du model");
+
+			model.GetComponent<UserModel>().meanLevelTime = 0.0f;
+			model.GetComponent<UserModel>().timeStart = 0.0f;
+			model.GetComponent<UserModel>().totalLevelTime = 0.0f;
+			model.GetComponent<UserModel>().difNbAction = 0;
+			model.GetComponent<UserModel>().nbTry = 0;
+			model.GetComponent<UserModel>().endLevel = false;
+			model.GetComponent<UserModel>().newCompetenceValide = false;
+			model.GetComponent<UserModel>().newCompetenceValideVector = new List<bool>();
+			model.GetComponent<UserModel>().levelHardProposition = new List<int>();
+		}
+	}
+
+	// Initialise les infos de level gen
+	private void initInfoLevelGen()
+    {
+		////     A FAIRE      /////
+    }
 
 	// See Quitter button in editor
 	public void quitGame(){

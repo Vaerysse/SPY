@@ -24,4 +24,24 @@ public class SendStatements_wrapper : MonoBehaviour
 		MainLoop.callAppropriateSystemMethod ("SendStatements", "playLevelActivated", null);
 	}
 
+	public void resetLevelActiveted()
+	{
+		MainLoop.callAppropriateSystemMethod ("SendStatements", "resetLevelActiveted", null);
+	}
+
+	public void endLevel()
+	{
+		MainLoop.callAppropriateSystemMethod ("SendStatements", "endLevel", null);
+	}
+
+	public void newCompetenceValide()
+	{
+		MainLoop.callAppropriateSystemMethod ("SendStatements", "newCompetenceValide", null);
+	}
+
+	public void paraLevelProcessCreation()
+	{
+		MainLoop.callAppropriateSystemMethod ("SendStatements", "paraLevelProcessCreation", null);
+	}
+
 }

@@ -15,6 +15,7 @@ public class LevelGenerator : FSystem {
 	private Family levelGO = FamilyManager.getFamily(new AnyOfComponents(typeof(Position), typeof(CurrentAction)));
 	private Family enemyScript = FamilyManager.getFamily(new AllOfComponents(typeof(HorizontalLayoutGroup), typeof(CanvasRenderer)), new NoneOfComponents(typeof(Image)));
 	private Family editableScriptContainer = FamilyManager.getFamily(new AllOfComponents(typeof(UITypeContainer), typeof(VerticalLayoutGroup), typeof(CanvasRenderer), typeof(PointerSensitive)));
+	private Family FinfoLevelGen = FamilyManager.getFamily(new AnyOfComponents(typeof(infoLevelGenerator))); // Charge la famille d'information sur le niveau créer procedurallement
 	private List<List<int>> map;
 	private GameData gameData;
 	private GameObject scriptContainer;
@@ -124,7 +125,7 @@ public class LevelGenerator : FSystem {
 			Debug.Log(gameData.levelToLoad.Item1);
 			Debug.Log(gameData.levelToLoad.Item2);
 			infoLevelGen = GameObject.Find("infoLevelGen");
-			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("infoLevelGen"));
+			model = GameObject.Find("Learner");
 			// Pour les tests
 			infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 4;
 			List<bool> listTest = new List<bool>();
@@ -132,6 +133,7 @@ public class LevelGenerator : FSystem {
 			listTest.Add(true);
 			listTest.Add(false);
 			infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = listTest;
+			infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 2;
 			if (gameData.levelToLoad.Item1 != "generique")
 			{
 				XmlToLevel(gameData.levelList[gameData.levelToLoad.Item1][gameData.levelToLoad.Item2]);
@@ -558,10 +560,54 @@ public class LevelGenerator : FSystem {
 		}
 	}
 
+    // Regarde le status de l'apprenant et défini les paramétre pour la création du niveau générer procéduralement
+    public void choiceParameterLevel()
+    {
+		// On regarde qu'elle compétence est validé et qu'elle niveau de difficulté est attendue pour chacun d'elle
+		List<bool> stepLearning = model.GetComponent<UserModel>().stepLearning;
+		List<int> levelHardProposition = model.GetComponent<UserModel>().levelHardProposition;
+
+		// On choisis au hasard de travailler sur une nouvelle compentence ou bien un mélange de ceux déjà connue
+		bool learnNewComp = false;
+
+		//On commence par regarder si il reste des nouvelles compétences à apprendre
+		if(stepLearning.Contains(false)){
+			Debug.Log("On peux apprend une nouvelle compétence");
+			float rndChoice = Random.Range(0, 1);
+            // 0.5 pourcent de chance d'apprendre une nouvelle compétence
+            if(rndChoice < 0.5f)
+			{
+				Debug.Log("On apprend une nouvelle compétence");
+				learnNewComp = true;
+			}
+		}
+
+		// Si on travail sur un nouvelle compétence, on regarde sur laquel on peux travaillé
+
+		Dictionary<List<bool>, bool> learningState = model.GetComponent<UserModel>().learningState;
+
+
+
+		// on définit le niveau de difficulté quel compétence seront travailler selon la difficulté
+		// 1 -> Une seul compétence de travaillé
+		// 2 -> Deux ou trois compétences travaillé
+		// 3 -> Plus de trois compétences travaillé
+
+		// On met à jour les données de infoLevelGenerator
+
+		// On initialise les données de UserModel pour suivre l'apprentissage de l'utilisateur durant l'execution du niveau
+
+
+	}
+
 
 	//Création de niveau auto
 	public void CreateLvlAuto() {
 		Debug.Log("Création niveau auto");
+
+		// Définie la difficulté du niveau
+		choiceParameterLevel();
+
 		//Variable pour la création
 		gameData.totalActionBloc = 0;
 		gameData.totalStep = 0;
@@ -597,6 +643,9 @@ public class LevelGenerator : FSystem {
 
 		//pour les vérifictions
 		vericationPath();
+
+		// Déclaration variable pour envoie des parametre du niveau par la trace
+		infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = true;
 	}
 
 	//Création d'un chemin automatique selon les différentes variables de difficulté

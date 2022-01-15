@@ -19,6 +19,11 @@ public class LevelGenerator_wrapper : MonoBehaviour
 		MainLoop.callAppropriateSystemMethod ("LevelGenerator", "computeNext", container);
 	}
 
+	public void choiceParameterLevel()
+	{
+		MainLoop.callAppropriateSystemMethod ("LevelGenerator", "choiceParameterLevel", null);
+	}
+
 	public void CreateLvlAuto()
 	{
 		MainLoop.callAppropriateSystemMethod ("LevelGenerator", "CreateLvlAuto", null);

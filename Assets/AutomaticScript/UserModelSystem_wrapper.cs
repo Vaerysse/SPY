@@ -9,9 +9,9 @@ public class UserModelSystem_wrapper : MonoBehaviour
 		this.hideFlags = HideFlags.HideInInspector; // Hide this component in Inspector
 	}
 
-	public void testModelPresence()
+	public void initModelLearner()
 	{
-		MainLoop.callAppropriateSystemMethod ("UserModelSystem", "testModelPresence", null);
+		MainLoop.callAppropriateSystemMethod ("UserModelSystem", "initModelLearner", null);
 	}
 
 	public void playLevelActivated()

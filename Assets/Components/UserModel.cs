@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class UserModel : MonoBehaviour {
 	// Advice: FYFY component aims to contain only public members (according to Entity-Component-System paradigm).
 
-	// Matice permettant de connaittre l'etat d'un apprenant, permet de voir aussi son état d'apprentissage lors que l'on mélange plusieurs compétences ensemble
+	// Matrice permettant de connaittre l'etat d'un apprenant, permet de voir aussi son état d'apprentissage lors que l'on mélange plusieurs compétences ensemble
 	// Le premier niveau du dictionnaire concerne la compétence que dont on souhaite obtenir les informations
 	// Le dictionnaire du deuxiéme niveau contient en clef la liste des compétence mse ensemble lors d'une génération de niveau
 	// Actuellement on représente la listes de compétence comme ceci : [Séquence, Boucle, If...Then, Négation, Console]
@@ -17,8 +17,17 @@ public class UserModel : MonoBehaviour {
 	public Dictionary<List<bool>, float> balanceFailWin = new  Dictionary<List<bool>, float>();
 	// Nom de l'apprenant
 	public string learnerName;
-	// Permet de connaitre ou en est l'aprenant dans son apprentissage
+	// Permet de connaitre ou en est l'aprenant dans son apprentissage : [Séquence, Boucle, If...Then, Négation, Console]
 	public List<bool> stepLearning = new List<bool>();
+	// Permet de savoir quel compétence dépend de quel compétence au préalable
+	// Atention les indice donnée sont ceux du vecteur : [Séquence, Boucle, If...Then, Négation, Console]
+	// dict format [Compétence : liste compétence dont on a besoin]
+	public Dictionary<int, List<int>> followStateLearn = new Dictionary<int, List<int>>();
+
+	// Variable pour l'initialisation du model
+	// Est ce que l'initialisation à déjà été faite
+	public bool initOk = false;
+
 
 	//Les variables suivante servent lors du calcule de connaissance de la compéence en fin de niveau
 
@@ -34,5 +43,11 @@ public class UserModel : MonoBehaviour {
 	public int nbTry;
 	// Défini si le joueur à atteind la fin du niveau
 	public bool endLevel;
+	// Défini si le joueur a validé une nouvelle compétence (ou compétence croisé) dans le niveau
+	public bool newCompetenceValide;
+	// Le vector de compétence que viens de valider le joueur
+	public List<bool> newCompetenceValideVector = new List<bool>();
+	// La difficulté pour le jours pour le prochain niveau
+	public List<int> levelHardProposition = new List<int>();
 
 }

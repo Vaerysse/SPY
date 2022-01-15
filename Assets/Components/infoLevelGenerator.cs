@@ -8,4 +8,10 @@ public class infoLevelGenerator : MonoBehaviour {
 	public int nbActionMin;
 	// Les compétence en test
 	public List<bool> vectorCompetence = new List<bool>();
+	// Difficulté du niveau
+	public int hardLevel;
+	// Défini si le niveau est fini d'être créer pour l'envoie des traces
+	public bool sendPara;
+	// Défini si un nouveau level à été lancé
+	public bool newLevelGen = true;
 }

@@ -9,14 +9,22 @@ using Newtonsoft.Json;
 public class SendStatements : FSystem {
 
     private Family f_actionForLRS = FamilyManager.getFamily(new AllOfComponents(typeof(ActionPerformedForLRS)));
+    private Family learnerModel = FamilyManager.getFamily(new AllOfComponents(typeof(UserModel))); // Charge les familles model
 
     public static SendStatements instance;
+    public GameObject currentLearner;
+    GameObject infoLevelGen; // info sur la création procedural du level 
+
+
+    private bool activeTrace = false;
 
     public SendStatements()
     {
         if (Application.isPlaying)
         {
             initGBLXAPI();
+            currentLearner = GameObject.Find("Learner");
+            infoLevelGen = GameObject.Find("infoLevelGen");
         }
         instance = this;
     }
@@ -76,7 +84,20 @@ public class SendStatements : FSystem {
                 GameObjectManager.removeComponent(listAP[i]);
             }
         }
-	}
+
+        // Si le niveau est terminé on apelle la trace pour la fin de niveau
+        if (currentLearner.GetComponent<UserModel>().endLevel)
+        {
+            endLevel();
+        }
+
+        // Si le joueur à acquis une nouvelle compétence ou compétence croisé
+        if (currentLearner.GetComponent<UserModel>().newCompetenceValide)
+        {
+
+        }
+
+    }
 
     public void testSendStatement()
     {
@@ -90,14 +111,94 @@ public class SendStatements : FSystem {
     }
 
     // Lorsque le joueur appuie sur le bouton play
+    // On envoie le temps écoulé pour avoir créer la sequence d'action + la liste des actions
     public void playLevelActivated()
     {
-        Debug.Log("play level activated : SendStatements");
-        GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
+        if (activeTrace)
         {
-            verb = "interacted",
-            objectType = "menu",
-            objectName = "ExectuteActionList"
-        });
+            Debug.Log("Play level activated : SendStatements");
+            GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
+            {
+                verb = "interacted",
+                objectType = "menu",
+                objectName = "ExectuteActionList"
+                // ajouter data
+            });
+        }
     }
+
+    // Losrque l'on reset un niveau
+    // On envoie juste l'action, on pourra avec la trace voir si quelqu'un à un pb pour compléter un niveau
+    public void resetLevelActiveted()
+    {
+        if (activeTrace)
+        {
+            Debug.Log("Reset level : SendStatements");
+            GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
+            {
+                verb = "interacted",
+                objectType = "menu",
+                objectName = "reset level"
+            });
+        }
+    }
+
+    // Lorsque le joueur arrive à faire sortir le robot du niveau
+    // Envoie les données de l'apprenant pour le niveau
+    // meanLevelTime, totalLevelTime, nbTry
+    public void endLevel()
+    {
+        if (activeTrace)
+        {
+            Debug.Log("End level : SendStatements");
+            GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
+            {
+                verb = "interacted", // à changer
+                objectType = "menu", // à changer
+                objectName = "Data End Level" 
+                // ajouter donnée
+            });
+        }
+    }
+
+    // Lorsque le joueur valide une compétence (ou un ensemble de complétence croisé)
+    // On envoie le vecteur validé
+    public void newCompetenceValide()
+    {
+        if (activeTrace)
+        {
+            Debug.Log("New competence valide : SendStatements");
+            GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
+            {
+                verb = "interacted", // à changer
+                objectType = "menu", // à changer
+                objectName = "New competence valide"
+                // ajouter donnée newCompetenceValideVector
+            });
+        }
+
+        // Une fois la trace envoyé (ou non selon option) on remet la variable de validation à false pour éviter des envoies succéssif
+        currentLearner.GetComponent<UserModel>().newCompetenceValide = false;
+    }
+
+    // Envoie les données de parametre du niveau créer procéduralement
+    // vectorCompetence, hardLevel
+    public void paraLevelProcessCreation()
+    {
+        if (activeTrace)
+        {
+            Debug.Log("Parameter Level Process Creation : SendStatements");
+            GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
+            {
+                verb = "interacted", // à changer
+                objectType = "menu", // à changer
+                objectName = "Parameter level creation process"
+                // ajouter donnée 
+            });
+        }
+
+        // Une fois la trace envoyé (ou non selon option) on remet la variable à false pour éviter des envoies succéssif
+        infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = false;
+    }
+
 }
