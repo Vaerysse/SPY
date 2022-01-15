@@ -13,5 +13,5 @@ public class infoLevelGenerator : MonoBehaviour {
 	// Défini si le niveau est fini d'être créer pour l'envoie des traces
 	public bool sendPara;
 	// Défini si un nouveau level à été lancé
-	public bool newLevelGen = true;
+	public bool newLevelGen;
 }

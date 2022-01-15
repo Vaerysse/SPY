@@ -15,7 +15,8 @@ public class LevelGenerator : FSystem {
 	private Family levelGO = FamilyManager.getFamily(new AnyOfComponents(typeof(Position), typeof(CurrentAction)));
 	private Family enemyScript = FamilyManager.getFamily(new AllOfComponents(typeof(HorizontalLayoutGroup), typeof(CanvasRenderer)), new NoneOfComponents(typeof(Image)));
 	private Family editableScriptContainer = FamilyManager.getFamily(new AllOfComponents(typeof(UITypeContainer), typeof(VerticalLayoutGroup), typeof(CanvasRenderer), typeof(PointerSensitive)));
-	private Family FinfoLevelGen = FamilyManager.getFamily(new AnyOfComponents(typeof(infoLevelGenerator))); // Charge la famille d'information sur le niveau créer procedurallement
+	private Family infoLevelGen_f = FamilyManager.getFamily(new AnyOfComponents(typeof(infoLevelGenerator))); // Charge la famille d'information sur le niveau créer procedurallement
+	private Family modelLearner_f = FamilyManager.getFamily(new AnyOfComponents(typeof(UserModel)));
 	private List<List<int>> map;
 	private GameData gameData;
 	private GameObject scriptContainer;
@@ -122,18 +123,12 @@ public class LevelGenerator : FSystem {
 			gameData = gameDataGO.GetComponent<GameData>();
 			gameData.Level = GameObject.Find("Level");
 			scriptContainer = enemyScript.First();
-			Debug.Log(gameData.levelToLoad.Item1);
-			Debug.Log(gameData.levelToLoad.Item2);
-			infoLevelGen = GameObject.Find("infoLevelGen");
-			model = GameObject.Find("Learner");
+			infoLevelGen = infoLevelGen_f.First();
+			model = modelLearner_f.First();
+
 			// Pour les tests
 			infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 4;
-			List<bool> listTest = new List<bool>();
-			listTest.Add(true);
-			listTest.Add(true);
-			listTest.Add(false);
-			infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = listTest;
-			infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 2;
+
 			if (gameData.levelToLoad.Item1 != "generique")
 			{
 				XmlToLevel(gameData.levelList[gameData.levelToLoad.Item1][gameData.levelToLoad.Item2]);
@@ -560,44 +555,223 @@ public class LevelGenerator : FSystem {
 		}
 	}
 
-    // Regarde le status de l'apprenant et défini les paramétre pour la création du niveau générer procéduralement
+    // Regarde le status de l'apprenant et défini les paramétres pour la création du niveau générer procéduralement
     public void choiceParameterLevel()
     {
-		// On regarde qu'elle compétence est validé et qu'elle niveau de difficulté est attendue pour chacun d'elle
 		List<bool> stepLearning = model.GetComponent<UserModel>().stepLearning;
 		List<int> levelHardProposition = model.GetComponent<UserModel>().levelHardProposition;
 
 		// On choisis au hasard de travailler sur une nouvelle compentence ou bien un mélange de ceux déjà connue
 		bool learnNewComp = false;
+		bool paraOk = false; // pour savoir si on trouve des parametre durant la recherche
 
 		//On commence par regarder si il reste des nouvelles compétences à apprendre
-		if(stepLearning.Contains(false)){
-			Debug.Log("On peux apprend une nouvelle compétence");
-			float rndChoice = Random.Range(0, 1);
-            // 0.5 pourcent de chance d'apprendre une nouvelle compétence
-            if(rndChoice < 0.5f)
+		if (stepLearning.Contains(false)){
+			float rndChoice = Random.Range(0.0f, 1.0f);
+            // 0.5 pourcent de chance d'apprendre une nouvelle compétence ou bien si l'apprenant n'a pas encore validé de compétence
+            if(rndChoice < 0.5f || !stepLearning.Contains(true))
 			{
-				Debug.Log("On apprend une nouvelle compétence");
 				learnNewComp = true;
 			}
 		}
 
-		// Si on travail sur un nouvelle compétence, on regarde sur laquel on peux travaillé
+        if (learnNewComp)
+        {
+			Debug.Log("On travail de nouvelle compétence");
+			bool compFind = false;
+			// Si on travail sur un nouvelle compétence, on regarde sur laquel on peux travaillé
+			for (int i = 0; i < stepLearning.Count; i++)
+			{
+				// Si la compétence n'est pas encore apprise
+                if (!stepLearning[i])
+                {
+					bool preroqui = true;
+					// Je vérifie si les prequis sont remplie
+					for(int j = 0; j < model.GetComponent<UserModel>().followStateLearn[i].Count; j++)
+                    {
+                        if (!stepLearning[model.GetComponent<UserModel>().followStateLearn[i][j]])
+                        {
+							preroqui = false;
+						}
 
-		Dictionary<List<bool>, bool> learningState = model.GetComponent<UserModel>().learningState;
+                        // Si les prérequi sont remplis on arréte la boucle
+                        if (preroqui)
+                        {
+							break;
+                        }
+                    }
 
+					// Si prérequi ok on initialise les paramétres
+					if (preroqui)
+                    {
+						compFind = true;
+						infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 1;
+						infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
+						List<bool> vectorComp = new List<bool>();
+						for(int k = 0; k < stepLearning.Count; k++)
+                        {
+							if(k != i)
+                            {
+								vectorComp.Add(false);
+							}
+                            else
+                            {
+								vectorComp.Add(true);
+							}
+                        }
+						infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
+						paraOk = true;
+					} 
+                }
 
+                if (compFind)
+                {
+					break;
+                }
+			}
 
-		// on définit le niveau de difficulté quel compétence seront travailler selon la difficulté
-		// 1 -> Une seul compétence de travaillé
-		// 2 -> Deux ou trois compétences travaillé
-		// 3 -> Plus de trois compétences travaillé
+			// Si au final pas de nouvelle compétence trouvé, on va finalement générer un niveau baser sur plusieurs compétence
+            if (!compFind)
+            {
+				learnNewComp = false;
+			}
+		}
 
-		// On met à jour les données de infoLevelGenerator
+		// Si on ne travail pas sur une nouvelle compétence
+		if (!learnNewComp)
+		{
+			Debug.Log("On ne travail pas de nouvelle compétence, mais on renforce les anciennes");
+			// On commence par en choisir une au hasard
+			bool compFind = false;
+			int indiceComp = 0;
+			while (!compFind)
+			{   // On tire un nombre au hasard parmis les compétences
+				int compRand = Random.Range(0, stepLearning.Count);
+				// Si cette compétence est aquise
+				if (stepLearning[compRand])
+				{
+					compFind = true;
+					indiceComp = compRand;
+				}
+			}
 
-		// On initialise les données de UserModel pour suivre l'apprentissage de l'utilisateur durant l'execution du niveau
+			// Ensuite on regarde le niveau de difficumlté associé à cette compétence
+			int hardlevel = model.GetComponent<UserModel>().levelHardProposition[indiceComp];
+			int compLearn = 0;
+			foreach (bool c in stepLearning)
+			{
+				if (c)
+				{
+					compLearn += 1;
 
+				}
+			}
 
+			// on définit quel compétence seront travailler selon la difficulté
+			// 1 -> Une seul compétence de travaillé
+			// 2 -> Deux ou trois compétences travaillé
+			// 3 -> Plus de trois compétences travaillé
+			int compteurAntiBoucleInfini = 20;
+			Dictionary<List<bool>, bool> learningState = model.GetComponent<UserModel>().learningState;
+			while (compteurAntiBoucleInfini > 0 || !paraOk)
+			{
+				if (hardlevel == 1 || compLearn == 1)
+				{
+					infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 1;
+					infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
+					List<bool> vectorComp = new List<bool>();
+					for (int k = 0; k < stepLearning.Count; k++)
+					{
+						if (k != indiceComp)
+						{
+							vectorComp.Add(false);
+						}
+						else
+						{
+							vectorComp.Add(true);
+						}
+					}
+                    // On vérifie que le vecteur trouvé n'ai pas déjà connue
+                    if (!learningState[vectorComp])
+                    {
+						infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
+						paraOk = true;
+					}
+				}
+				else if (hardlevel == 2 || compLearn == 2 || compLearn == 3)
+				{
+					infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 2;
+					infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
+					List<int> compPlus = new List<int>(); // On va choisir les compétences à associer
+					int nbComPlus = Random.Range(1, compLearn); // on veux entre 1 à 2 compétence en plus
+					while (compPlus.Count < nbComPlus) // Tant qu'on a pas les compétences
+					{
+						int c = Random.Range(0, 5);
+						if (c != indiceComp && stepLearning[c])
+						{
+							compPlus.Add(c);
+						}
+					}
+					List<bool> vectorComp = new List<bool>();
+					for (int k = 0; k < stepLearning.Count; k++)
+					{
+						if (k != indiceComp && !compPlus.Contains(k))
+						{
+							vectorComp.Add(false);
+						}
+						else
+						{
+							vectorComp.Add(true);
+						}
+					}
+					if (!learningState[vectorComp])
+					{
+						infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
+						paraOk = true;
+					}
+				}
+				else if (hardlevel == 3 || compLearn > 3)
+				{
+					infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 3;
+					infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
+					List<int> compPlus = new List<int>(); // On va choisir les compétences à associer
+					int nbComPlus = Random.Range(3, compLearn); // on veux entre 1 à 2 compétence en plus
+					while (compPlus.Count < nbComPlus) // Tant qu'on a pas les compétences
+					{
+						int c = Random.Range(0, 5);
+						if (c != indiceComp && stepLearning[c])
+						{
+							compPlus.Add(c);
+						}
+					}
+					List<bool> vectorComp = new List<bool>();
+					for (int k = 0; k < stepLearning.Count; k++)
+					{
+						if (k != indiceComp && !compPlus.Contains(k))
+						{
+							vectorComp.Add(false);
+						}
+						else
+						{
+							vectorComp.Add(true);
+						}
+					}
+					if (!learningState[vectorComp])
+					{
+						infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
+						paraOk = true;
+					}
+				}
+			}
+			compteurAntiBoucleInfini = compteurAntiBoucleInfini - 1;
+		}
+
+        // Si on a pas de parametre ok on recharge la sceane d'accueil
+        if (!paraOk)
+        {
+			Debug.Log("Probléme lors de la recherche des paramétres de niveau pour la création de niveau procédural");
+			GameObjectManager.loadScene("TitleScreen");
+		}
 	}
 
 
@@ -607,6 +781,20 @@ public class LevelGenerator : FSystem {
 
 		// Définie la difficulté du niveau
 		choiceParameterLevel();
+
+		//séquence : suite de couloir
+
+		// while : répétition de couloir + couloir OU couloir + piéce avec + porte possible dans tous les cas -> metre des actions que pour un morceau avant répétition
+
+		//If...then : ajouter deux portes (ou plus) pour une seul action d'ouverture (si while), sinon mettre robot
+
+		//Négation : mettre un ou deux action inverse
+
+		//Console : Pas d'action déplacable tous à la console
+
+		//difficulté 3 mettre de fausses actions en trop
+
+
 
 		//Variable pour la création
 		gameData.totalActionBloc = 0;

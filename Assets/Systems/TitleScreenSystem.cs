@@ -19,6 +19,9 @@ public class TitleScreenSystem : FSystem {
 	private GameObject cList;
 	private Dictionary<GameObject, List<GameObject>> levelButtons; //key = directory button,  value = list of level buttons
 
+	private GameObject infoLevelGen;
+	private GameObject model;
+
 	//Chargement des famille
 	private Family modelLearner = FamilyManager.getFamily(new AnyOfComponents(typeof(UserModel)));
 	private Family infoLevel_F = FamilyManager.getFamily(new AnyOfComponents(typeof(infoLevelGenerator)));
@@ -36,7 +39,10 @@ public class TitleScreenSystem : FSystem {
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("GameData"));
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("Learner")); // Permet de garder l'objet contenant la modélisation de l'apprenant entre chaque scéne
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("infoLevelGen")); // Permet de garder l'objet contenant les information des niveau scréer procéduralement entre chaque scéne
+
 			//Initialisation des infomations de suivis de niveau
+			infoLevelGen = infoLevel_F.First();
+			model = modelLearner.First();
 			initInfoLevelGen();
 			initModelLearn();
 
@@ -171,6 +177,11 @@ public class TitleScreenSystem : FSystem {
     {
 		gameData.levelToLoad = ("generique", 1);
 		Debug.Log("Generation procedural");
+		// On informe dans level info que l'on créer un nouveau niveau proceduralement
+		foreach(GameObject go in infoLevel_F)
+        {
+			go.GetComponent<infoLevelGenerator>().newLevelGen = true;
+		}
 		GameObjectManager.loadScene("MainScene");
 	}
 
@@ -200,15 +211,12 @@ public class TitleScreenSystem : FSystem {
 	// Initialise le model learner
 	private void initModelLearn()
     {
-		GameObject model = modelLearner.First();
-		GameObject infoLevelGen = infoLevel_F.First();
-
 		Debug.Log("Initialisation du model");
 		// Si initOk = false, alors c'est le premier chargement du model il faut initialiser les variable concernant l'apprenant en plus de ceux du suivant de l'apprantissage du niveau
 		if (!model.GetComponent<UserModel>().initOk)
 		{
 			Debug.Log("Initialisation  Général du model");
-			model.GetComponent<UserModel>().learnerName = "Test learner";
+			model.GetComponent<UserModel>().learnerName = "Test learner ok";
 
 			List<bool> listLearn = new List<bool>();
 			listLearn.Add(false); // Sequence
@@ -229,6 +237,14 @@ public class TitleScreenSystem : FSystem {
 			followStateLearn.Add(3, parent2); // Negation
 			followStateLearn.Add(4, parent0); // Console
 			model.GetComponent<UserModel>().followStateLearn = followStateLearn;
+			model.GetComponent<UserModel>().initOk = true;
+			List<int> hardList = new List<int>();
+			hardList.Add(1);
+			hardList.Add(1);
+			hardList.Add(1);
+			hardList.Add(1);
+			hardList.Add(1);
+			model.GetComponent<UserModel>().levelHardProposition = hardList;
 		}
 
 		// On réinitialise le level
@@ -244,15 +260,18 @@ public class TitleScreenSystem : FSystem {
 			model.GetComponent<UserModel>().endLevel = false;
 			model.GetComponent<UserModel>().newCompetenceValide = false;
 			model.GetComponent<UserModel>().newCompetenceValideVector = new List<bool>();
-			model.GetComponent<UserModel>().levelHardProposition = new List<int>();
 		}
 	}
 
 	// Initialise les infos de level gen
 	private void initInfoLevelGen()
     {
-		////     A FAIRE      /////
-    }
+		infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
+		infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = new List<bool>();
+		infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 1; //  Niveau 1 par defaut
+		infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = false;
+		infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen = true;
+	}
 
 	// See Quitter button in editor
 	public void quitGame(){

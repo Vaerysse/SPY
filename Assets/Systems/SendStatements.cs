@@ -185,6 +185,9 @@ public class SendStatements : FSystem {
     // vectorCompetence, hardLevel
     public void paraLevelProcessCreation()
     {
+        // Remet la variable à false pour éviter des envoies succéssif
+        infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = false;
+
         if (activeTrace)
         {
             Debug.Log("Parameter Level Process Creation : SendStatements");
@@ -196,9 +199,6 @@ public class SendStatements : FSystem {
                 // ajouter donnée 
             });
         }
-
-        // Une fois la trace envoyé (ou non selon option) on remet la variable à false pour éviter des envoies succéssif
-        infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = false;
     }
 
 }

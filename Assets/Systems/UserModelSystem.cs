@@ -9,6 +9,7 @@ public class UserModelSystem : FSystem {
 	// Load family
 	private Family learnerModel = FamilyManager.getFamily(new AllOfComponents(typeof(UserModel)));
 	private Family editableScriptContainer_f = FamilyManager.getFamily(new AllOfComponents(typeof(UITypeContainer)), new AnyOfTags("ScriptConstructor"));
+	private Family infoLevel_F = FamilyManager.getFamily(new AnyOfComponents(typeof(infoLevelGenerator)));
 
 
 	// Learner
@@ -24,13 +25,13 @@ public class UserModelSystem : FSystem {
 	{
 		if(Application.isPlaying)
 		{
-			currentLearner = GameObject.Find("Learner");
+			currentLearner = learnerModel.First();
 			if(editableScriptContainer_f.Count  > 0)
             {
 				editableContainer = editableScriptContainer_f.First(); // On récupére le container d'action éditable
+				Debug.Log("nb enfant au début : " + editableContainer.transform.childCount);
 			}
-			infoLevelGen = GameObject.Find("infoLevelGen"); // On récupére le gameobject contenant les infos du niveau
-			Debug.Log("nb enfant au début : " + editableContainer.transform.childCount);
+			infoLevelGen = infoLevel_F.First(); // On récupére le gameobject contenant les infos du niveau
 
 			initModelLearner();
 			stratTentative();
@@ -80,7 +81,6 @@ public class UserModelSystem : FSystem {
 			currentLearner.GetComponent<UserModel>().endLevel = false;
 			currentLearner.GetComponent<UserModel>().newCompetenceValide = false;
 			currentLearner.GetComponent<UserModel>().newCompetenceValideVector = new List<bool>();
-			currentLearner.GetComponent<UserModel>().levelHardProposition = new List<int>();
 		}
 	}
 
