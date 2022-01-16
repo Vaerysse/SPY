@@ -37,6 +37,10 @@ public class LevelGenerator : FSystem {
 	int nbRoom = 0;
 	// Nombre de porte créer
 	int nbGate = 0;
+	// Difficulté du niveau
+	int hardlevel = 0;
+	// Dico des action et du nombre à créer ensuite
+	public Dictionary<string, int> actionCreation = new Dictionary<string, int>();
 
 
 	//Classe Case 
@@ -125,6 +129,16 @@ public class LevelGenerator : FSystem {
 			scriptContainer = enemyScript.First();
 			infoLevelGen = infoLevelGen_f.First();
 			model = modelLearner_f.First();
+
+			//Création du dictionaire pour la création procédurale des actions
+			actionCreation.Add("Forward", 0);
+			actionCreation.Add("TurnLeft", 0);
+			actionCreation.Add("TurnRight", 0);
+			actionCreation.Add("Wait", 0);
+			actionCreation.Add("Activate", 0);
+			actionCreation.Add("TurnBack", 0);
+			actionCreation.Add("If", 0);
+			actionCreation.Add("For", 0);
 
 			// Pour les tests
 			infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 4;
@@ -364,7 +378,7 @@ public class LevelGenerator : FSystem {
 
 		eraseMap();
 		generateMap();
-        GameObjectManager.addComponent<GameLoaded>(MainLoop.instance.gameObject);
+		GameObjectManager.addComponent<GameLoaded>(MainLoop.instance.gameObject);
 	}
 
 	private void readXMLMap(XmlNode mapNode){
@@ -383,6 +397,7 @@ public class LevelGenerator : FSystem {
 			//gameData.actionBlocLimit.Add(int.Parse(limitNode.Attributes.GetNamedItem("limit").Value));
 			actionName = limitNode.Attributes.GetNamedItem("actionType").Value;
 			if (!gameData.actionBlocLimit.ContainsKey(actionName)){
+				Debug.Log(actionName);
 				gameData.actionBlocLimit[actionName] = int.Parse(limitNode.Attributes.GetNamedItem("limit").Value);
 			}
 		}
@@ -656,7 +671,7 @@ public class LevelGenerator : FSystem {
 			}
 
 			// Ensuite on regarde le niveau de difficumlté associé à cette compétence
-			int hardlevel = model.GetComponent<UserModel>().levelHardProposition[indiceComp];
+			hardlevel = model.GetComponent<UserModel>().levelHardProposition[indiceComp];
 			int compLearn = 0;
 			foreach (bool c in stepLearning)
 			{
@@ -782,6 +797,10 @@ public class LevelGenerator : FSystem {
 		// Définie la difficulté du niveau
 		choiceParameterLevel();
 
+		// Parametrage du niveau juste avan la création
+
+
+
 		//séquence : suite de couloir
 
 		// while : répétition de couloir + couloir OU couloir + piéce avec + porte possible dans tous les cas -> metre des actions que pour un morceau avant répétition
@@ -812,14 +831,25 @@ public class LevelGenerator : FSystem {
 		PathCreation();
 		//Ajout du player et de la platforme de teleportation du début
 		StartCreation();
+
 		// Ajoute des porte et terminal de contrôle
-		int rNbGate = Random.Range(1, nbCorridor);
+		int rNbGate = 0;
+		int rNbRobot = 0;
+		if (hardlevel == 1)
+        {
+			rNbGate = 1;
+			rNbRobot = 1;
+		}
+		if (hardlevel == 2)
+		{
+			rNbGate = Random.Range(1, nbCorridor);
+			robotCreate = RobotCreation();
+		}
 		for (int i = 1; i <= rNbGate; i++)
 		{
 			gateCreate = GateCreation();
 		}
 		//ajout des robots
-		int rNbRobot = Random.Range(1, nbRoom);
 		for (int i = 1; i <= rNbRobot; i++)
 		{
 			robotCreate = RobotCreation();
@@ -832,8 +862,16 @@ public class LevelGenerator : FSystem {
 		//pour les vérifictions
 		vericationPath();
 
+		// On initialise la liste d'action
+		foreach (KeyValuePair<string, int> actionl in actionCreation)
+        {
+			gameData.actionBlocLimit[actionl.Key] = actionl.Value;
+		}
+
 		// Déclaration variable pour envoie des parametre du niveau par la trace
 		infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = true;
+
+		GameObjectManager.addComponent<GameLoaded>(MainLoop.instance.gameObject);
 	}
 
 	//Création d'un chemin automatique selon les différentes variables de difficulté
@@ -845,9 +883,9 @@ public class LevelGenerator : FSystem {
 		int x = 1;
 		int y = 1;
 		int pathPos = 1;
-
-		int taillePath = Random.Range(20, 201); // A remplacer par tailleMinPath et tailleMaxPath + 1 (car ne prend pas la derniére valeur A VERIFIER) lorsque que j'ajouterais la gestion de la difficulté
-		Debug.Log(taillePath);
+		int nbElement = 0;
+		int nbElementMax = 2;
+		bool stopCreation = false;
 
 		// On créer et enregistre les informations de la case de départ
 		List<int> startPos = new List<int> { x, y };
@@ -855,45 +893,93 @@ public class LevelGenerator : FSystem {
 		pathLevel.Add(start);
 		createCell(x, y);
 
-		int randElement = Random.Range(0, 2); // a modifier selon le nombre d'ellement
-
-		int cpt = 0;
-		while(pathPos < taillePath && cpt< 100)
+		while (!stopCreation && nbElement < nbElementMax)
         {
-			randElement = Random.Range(0, 2); // a modifier selon le nombre d'ellement
-			
+			int randElement = Random.Range(0, 2); // a modifier selon le nombre d'ellement
+
 			// Si on fait 0 on créer un couloir
 			if (randElement == 0)
-            {
-				pathPos = CorridorCreation(x, y, pathPos, taillePath - pathPos);
-			}
+			{
+				pathPos = CorridorCreation(x, y, pathPos, 6);
+			}// Sinon à 1 on fait une piéce
 			else if (randElement == 1)
-            {
-				pathPos = RoomCreation(x, y, pathPos, taillePath - pathPos);
+			{
+				pathPos = RoomCreation(x, y, pathPos, 6);
 			}
 
+			// Permet de noter présisément qu'elle est la dernier case du chemin creer pour éviter d'éventuelle erreur
 			foreach (Case item in pathLevel)
-            {
-				if(item.getPathPosition() == pathPos)
-                {
+			{
+				if (item.getPathPosition() == pathPos)
+				{
 					x = item.getCoord()[0];
 					y = item.getCoord()[1];
 				}
-            }
-			cpt += 1;
+			}
+			nbElement += 1;
+		}
+
+		// Si on demande la compétence while
+        if (infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[1])
+        {
+			pathPos =  whileCreation(x, y, pathPos);
 		}
 
 		// Une fois la trajet fini, on note la derniére case comme la case de fin
-		foreach(Case item in pathLevel)
-        {
+		foreach (Case item in pathLevel)
+		{
 			if (item.getPathPosition() == pathPos)
-            {
+			{
 				item.setName("end");
-            }
-        }
+			}
+		}
 	}
 
-	// Parcourt le list de pathLevel afin dd définir si il éxiste une casee sur les mêmes coordonées int x, int y
+	//Reboucle sur le début du niveau pour recréer un couloir chemin identique
+	private int whileCreation(int x, int y, int pathPos)
+    {
+		// on parcourt case par case le chemin effectué depuis le début et on le recréer en modifiant la position par rapport à la position de racordement 
+		int i = 0;
+		List<Case> pathlevelTemp = new List<Case>();
+		int pathposition = 0;
+		foreach (Case c in pathLevel)
+        {
+			int newX = c.getCoord()[0] + x;
+			int newY = c.getCoord()[1] + y;
+			if (voidCase(new List<int> { newX, newY }))
+            {
+				// si la case est la case du chemin on le renseihne dant la nouvelle
+				if(c.getPathPosition() != -1)
+                {
+					Case newCase = new Case("loop", 1, (pathPos + c.getPathPosition()), new List<int> { newX, newY });
+					pathlevelTemp.Add(newCase);
+					createCell(newX, newY);
+					i++;
+				}
+                else
+                {
+					Case newCase = new Case("loop", 1, -1, new List<int> { newX, newY });
+					pathlevelTemp.Add(newCase);
+					createCell(newX, newY);
+				}
+			}
+		}
+
+		//on ajoute les nouvelle case au pathlevel
+		// Et on cherche la dernier case
+		foreach (Case c in pathlevelTemp)
+		{
+			pathLevel.Add(c);
+			if(c.getPathPosition() > pathposition)
+            {
+				pathposition = c.getPathPosition();
+			}
+		}
+
+		return pathposition;
+	}
+
+	// Parcourt le list de pathLevel afin de définir si il éxiste une case sur les mêmes coordonées int x, int y
 	private bool voidCase(List <int> coor) {
 
 		foreach(Case item in pathLevel)
@@ -1291,7 +1377,16 @@ public class LevelGenerator : FSystem {
 		}
 
 		int lastPosition = pathPos;
-
+		if (hardlevel > 1)
+        {
+			actionCreation["TurnLeft"] += 1;
+			actionCreation["TurnRight"] += 1;
+		}
+        else
+        {
+			actionCreation["TurnLeft"] = -1;
+			actionCreation["TurnRight"] = -1;
+		}
 		for (int i = 1; i <= sizeCorridor; i++)
         {
             if (orientation == "nord")
@@ -1324,6 +1419,14 @@ public class LevelGenerator : FSystem {
 				return lastPosition;
 			}
 			lastPosition = (pathPos + i);
+			if(hardlevel > 1)
+            {
+				actionCreation["Forward"] += 1;
+			}
+            else
+            {
+				actionCreation["Forward"] = -1;
+			}
 		}
 		return lastPosition;
 	}
@@ -1475,7 +1578,7 @@ public class LevelGenerator : FSystem {
 				{
 					for (int newy = coordy - longeur; newy <= coordy - 1; newy++)
 					{
-						Case newCase = new Case("room", nbRoom, 0, new List<int> { newx, newy });
+						Case newCase = new Case("room", nbRoom, -1, new List<int> { newx, newy });
 						pathLevel.Add(newCase);
 						createCell(newx, newy);
 					}
@@ -1492,7 +1595,7 @@ public class LevelGenerator : FSystem {
 				{
 					for (int newy = coordy - rEnter; newy <= coordy + (longeur - rEnter); newy++)
 					{
-						Case newCase = new Case("room", nbRoom, 0, new List<int> { newx, newy });
+						Case newCase = new Case("room", nbRoom, -1, new List<int> { newx, newy });
 						pathLevel.Add(newCase);
 						createCell(newx, newy);
 					}
@@ -1509,7 +1612,7 @@ public class LevelGenerator : FSystem {
 				{
 					for (int newy = coordy + 1; newy <= coordy + longeur; newy++)
 					{
-						Case newCase = new Case("room", nbRoom, 0, new List<int> { newx, newy });
+						Case newCase = new Case("room", nbRoom, -1, new List<int> { newx, newy });
 						pathLevel.Add(newCase);
 						createCell(newx, newy);
 					}
@@ -1526,7 +1629,7 @@ public class LevelGenerator : FSystem {
 				{
 					for (int newy = coordy - rEnter; newy <= coordy + (longeur - rEnter); newy++)
 					{
-						Case newCase = new Case("room", nbRoom, 0, new List<int> { newx, newy });
+						Case newCase = new Case("room", nbRoom, -1, new List<int> { newx, newy });
 						pathLevel.Add(newCase);
 						createCell(newx, newy);
 					}
