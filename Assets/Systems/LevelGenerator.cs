@@ -141,7 +141,7 @@ public class LevelGenerator : FSystem {
 			actionCreation.Add("For", 0);
 
 			// Pour les tests
-			infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 4;
+			Debug.Log("nombre de learn : " + modelLearner_f.Count);
 
 			if (gameData.levelToLoad.Item1 != "generique")
 			{
@@ -670,7 +670,7 @@ public class LevelGenerator : FSystem {
 				}
 			}
 
-			// Ensuite on regarde le niveau de difficumlté associé à cette compétence
+			// Ensuite on regarde le niveau de difficulté associé à cette compétence
 			hardlevel = model.GetComponent<UserModel>().levelHardProposition[indiceComp];
 			int compLearn = 0;
 			foreach (bool c in stepLearning)
@@ -688,10 +688,14 @@ public class LevelGenerator : FSystem {
 			// 3 -> Plus de trois compétences travaillé
 			int compteurAntiBoucleInfini = 20;
 			Dictionary<List<bool>, bool> learningState = model.GetComponent<UserModel>().learningState;
-			while (compteurAntiBoucleInfini > 0 || !paraOk)
+			while (compteurAntiBoucleInfini > 0 && !paraOk)
 			{
-				if (hardlevel == 1 || compLearn == 1)
+				Debug.Log("Recherche para");
+				Debug.Log("hardlevel : " + hardlevel);
+				Debug.Log("compLearn : " + compLearn);
+				if (hardlevel == 1)
 				{
+					Debug.Log("On para le niveau 1");
 					infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 1;
 					infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
 					List<bool> vectorComp = new List<bool>();
@@ -706,15 +710,26 @@ public class LevelGenerator : FSystem {
 							vectorComp.Add(true);
 						}
 					}
-                    // On vérifie que le vecteur trouvé n'ai pas déjà connue
-                    if (!learningState[vectorComp])
+					// On vérifie que le vecteur trouvé n'ai pas déjà connue
+					if (learningState.ContainsKey(vectorComp))
+					{
+						if (!learningState[vectorComp])
+						{
+							Debug.Log("ok pour vecteur level 1");
+							infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
+							paraOk = true;
+						}
+					}
+                    else
                     {
+						Debug.Log("ok pour vecteur level 1");
 						infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
 						paraOk = true;
 					}
 				}
-				else if (hardlevel == 2 || compLearn == 2 || compLearn == 3)
+				else if (hardlevel == 2 && compLearn <= 2)
 				{
+					Debug.Log("On para le niveau 2");
 					infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 2;
 					infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
 					List<int> compPlus = new List<int>(); // On va choisir les compétences à associer
@@ -739,14 +754,25 @@ public class LevelGenerator : FSystem {
 							vectorComp.Add(true);
 						}
 					}
-					if (!learningState[vectorComp])
+					if (learningState.ContainsKey(vectorComp))
 					{
+						if (!learningState[vectorComp])
+						{
+							Debug.Log("ok pour vecteur level 1");
+							infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
+							paraOk = true;
+						}
+					}
+                    else
+                    {
+						Debug.Log("ok pour vecteur level 2");
 						infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
 						paraOk = true;
 					}
 				}
-				else if (hardlevel == 3 || compLearn > 3)
+				else if (hardlevel == 3 && compLearn > 3)
 				{
+					Debug.Log("On para le niveau 3");
 					infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 3;
 					infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
 					List<int> compPlus = new List<int>(); // On va choisir les compétences à associer
@@ -771,17 +797,27 @@ public class LevelGenerator : FSystem {
 							vectorComp.Add(true);
 						}
 					}
-					if (!learningState[vectorComp])
+					if (learningState.ContainsKey(vectorComp))
 					{
+						if (!learningState[vectorComp])
+						{
+							Debug.Log("ok pour vecteur level 1");
+							infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
+							paraOk = true;
+						}
+					}
+                    else
+                    {
+						Debug.Log("ok pour vecteur level 3");
 						infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = vectorComp;
 						paraOk = true;
 					}
 				}
+				compteurAntiBoucleInfini = compteurAntiBoucleInfini - 1;
 			}
-			compteurAntiBoucleInfini = compteurAntiBoucleInfini - 1;
 		}
 
-        // Si on a pas de parametre ok on recharge la sceane d'accueil
+        // Si on a pas de parametre ok on recharge la scene d'accueil
         if (!paraOk)
         {
 			Debug.Log("Probléme lors de la recherche des paramétres de niveau pour la création de niveau procédural");
@@ -793,6 +829,8 @@ public class LevelGenerator : FSystem {
 	//Création de niveau auto
 	public void CreateLvlAuto() {
 		Debug.Log("Création niveau auto");
+
+		infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
 
 		// Définie la difficulté du niveau
 		choiceParameterLevel();
@@ -848,11 +886,37 @@ public class LevelGenerator : FSystem {
 		for (int i = 1; i <= rNbGate; i++)
 		{
 			gateCreate = GateCreation();
+			if(hardlevel > 1)
+            {
+				actionCreation["Activate"] += 1;
+				//si while et if
+				if(infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[1] && infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[2])
+                {
+					actionCreation["If"] += 1;
+				}
+			}
+            else
+            {
+				actionCreation["Activate"] = -1;
+				//si while et if
+				if (infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[1] && infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[2])
+				{
+					actionCreation["If"] = -1;
+				}
+			}
 		}
 		//ajout des robots
 		for (int i = 1; i <= rNbRobot; i++)
 		{
 			robotCreate = RobotCreation();
+			if (hardlevel > 1)
+			{
+				actionCreation["Wait"] += 1;
+			}
+			else
+			{
+				actionCreation["Wait"] = -1;
+			}
 		}
 		//Ajout des murs 
 		WallCreation();
@@ -870,7 +934,6 @@ public class LevelGenerator : FSystem {
 
 		// Déclaration variable pour envoie des parametre du niveau par la trace
 		infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = true;
-
 		GameObjectManager.addComponent<GameLoaded>(MainLoop.instance.gameObject);
 	}
 
@@ -975,6 +1038,9 @@ public class LevelGenerator : FSystem {
 				pathposition = c.getPathPosition();
 			}
 		}
+
+		actionCreation["For"] = -1;
+		infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin += 1;
 
 		return pathposition;
 	}
@@ -1381,12 +1447,15 @@ public class LevelGenerator : FSystem {
         {
 			actionCreation["TurnLeft"] += 1;
 			actionCreation["TurnRight"] += 1;
+			actionCreation["TurnBack"] += 1;
 		}
         else
         {
 			actionCreation["TurnLeft"] = -1;
 			actionCreation["TurnRight"] = -1;
+			actionCreation["TurnBack"] += -1;
 		}
+		infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin += 1;
 		for (int i = 1; i <= sizeCorridor; i++)
         {
             if (orientation == "nord")
@@ -1427,6 +1496,7 @@ public class LevelGenerator : FSystem {
             {
 				actionCreation["Forward"] = -1;
 			}
+			infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin += 1;
 		}
 		return lastPosition;
 	}
@@ -1570,6 +1640,19 @@ public class LevelGenerator : FSystem {
 		//Si ok, on créer la salle à la bonne position
 		if (positionnementOK)
         {
+			if (hardlevel > 1)
+			{
+				actionCreation["TurnLeft"] += 1;
+				actionCreation["TurnRight"] += 1;
+				actionCreation["TurnBack"] += 1;
+			}
+			else
+			{
+				actionCreation["TurnLeft"] = -1;
+				actionCreation["TurnRight"] = -1;
+				actionCreation["TurnBack"] += -1;
+			}
+			infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin += 1;
 			//si au nord
 			if (orientation == "nord")
 			{
@@ -1677,6 +1760,15 @@ public class LevelGenerator : FSystem {
 						item.setPathPosition(newPathPos);
 					}
 				}
+				if (hardlevel > 1)
+				{
+					actionCreation["Forward"] += 1;
+				}
+				else
+				{
+					actionCreation["Forward"] = -1;
+				}
+				infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin += 1;
 			}
 		}
 		return newPathPos;

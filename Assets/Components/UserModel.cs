@@ -10,11 +10,11 @@ public class UserModel : MonoBehaviour {
 	// Actuellement on représente la listes de compétence comme ceci : [Séquence, Boucle, If...Then, Négation, Console]
 	// Attention à bien respecter l'ordre de création de la séquence dans l'odre
 	// Exemple d'utilisation -> Séquence + Négation + Console = [1, 0, 0, 1, 1]
-	public Dictionary<List<bool>, bool> learningState = new Dictionary<List<bool>, bool>();
+	public Dictionary<List<bool>, bool> learningState;
 	// Même utilisation que learningState pour connaitre le nombre de fois ou l'apprenant à réussit
 	// On incrémente ou décrémente selon les critére de réussite d'un niveau
 	// Arriver à un certain nombre à définir, on valide la (ou le mélange) de compétence dans learningState
-	public Dictionary<List<bool>, float> balanceFailWin = new  Dictionary<List<bool>, float>();
+	public Dictionary<List<bool>, float> balanceFailWin;
 	// Nom de l'apprenant
 	public string learnerName;
 	// Permet de connaitre ou en est l'aprenant dans son apprentissage : [Séquence, Boucle, If...Then, Négation, Console]
@@ -22,7 +22,7 @@ public class UserModel : MonoBehaviour {
 	// Permet de savoir quel compétence dépend de quel compétence au préalable
 	// Atention les indice donnée sont ceux du vecteur : [Séquence, Boucle, If...Then, Négation, Console]
 	// dict format [Compétence : liste compétence dont on a besoin]
-	public Dictionary<int, List<int>> followStateLearn = new Dictionary<int, List<int>>();
+	public Dictionary<int, List<int>> followStateLearn;
 
 	// Variable pour l'initialisation du model
 	// Est ce que l'initialisation à déjà été faite

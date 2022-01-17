@@ -40,6 +40,8 @@ public class TitleScreenSystem : FSystem {
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("Learner")); // Permet de garder l'objet contenant la modélisation de l'apprenant entre chaque scéne
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("infoLevelGen")); // Permet de garder l'objet contenant les information des niveau scréer procéduralement entre chaque scéne
 
+			Debug.Log("nombre de learn : " + modelLearner.Count);
+
 			//Initialisation des infomations de suivis de niveau
 			infoLevelGen = infoLevel_F.First();
 			model = modelLearner.First();
@@ -245,6 +247,8 @@ public class TitleScreenSystem : FSystem {
 			hardList.Add(1);
 			hardList.Add(1);
 			model.GetComponent<UserModel>().levelHardProposition = hardList;
+			model.GetComponent<UserModel>().learningState = new Dictionary<List<bool>, bool>();
+			model.GetComponent<UserModel>().balanceFailWin = new Dictionary<List<bool>, float>();
 		}
 
 		// On réinitialise le level

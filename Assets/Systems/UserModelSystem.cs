@@ -144,7 +144,7 @@ public class UserModelSystem : FSystem {
         {
 			point = 1;
 		}
-		else if (currentLearner.GetComponent<UserModel>().nbTry >= 10)
+		else if (currentLearner.GetComponent<UserModel>().nbTry >= 5)
         {
 			point = -1;
 		}
@@ -158,28 +158,66 @@ public class UserModelSystem : FSystem {
 			point = point - 0.5f;
 		}
 
-		// on met à jour la balance pour la/les compétences testées
-		// Si le vecteur compétence n'est pas encore présent on l'ajoutedans le suivis de la balance ET dans le dictionnaire de compétence
-		if (!currentLearner.GetComponent<UserModel>().balanceFailWin.ContainsKey(infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence))
+		Debug.Log("Point obtenue : " + point);
+
+		// Pb avec les clef du dico il faut noter la sequence à la main...
+		bool vecPresent = false;
+		List<bool> vecComp = new List<bool>();
+		int cpt = 0;
+		foreach (KeyValuePair<List<bool>, float> vec in currentLearner.GetComponent<UserModel>().balanceFailWin)
 		{
-			if(point < 0)
+			bool res = true;
+			for(int i = 0; i < vec.Key.Count; i++)
+            {
+				if(vec.Key[i] != infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[i])
+                {
+					res = false;
+
+				}
+            }
+
+			if (res)
+			{
+				vecPresent = true;
+				vecComp = vec.Key;
+
+			}
+			cpt++;
+		}
+		if (!vecPresent)
+		{
+			vecComp = infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence;
+		}
+
+        // on met à jour la balance pour la/les compétences testées
+        // Si le vecteur compétence n'est pas encore présent on l'ajoutedans le suivis de la balance ET dans le dictionnaire de compétence
+        if (!vecPresent)
+		{
+			Debug.Log("On ajoute le vec comp en tant que clef");
+			if (point < 0)
             {
 				point = 0;
             }
-			currentLearner.GetComponent<UserModel>().balanceFailWin.Add(infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence, point);
-			currentLearner.GetComponent<UserModel>().learningState.Add(infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence, false); // la compétence n'est pas aprice donc false
+			currentLearner.GetComponent<UserModel>().balanceFailWin.Add(vecComp, point);
+			currentLearner.GetComponent<UserModel>().learningState.Add(vecComp, false); // la compétence n'est pas aprice donc false
 		}
 		else // sinon on met juste à jour la valeur en faisant attention de ne pas avoir de valeur négative
 		{
-			if(currentLearner.GetComponent<UserModel>().balanceFailWin[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] + point < 0)
-            {
-				currentLearner.GetComponent<UserModel>().balanceFailWin[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] = 0;
+			Debug.Log("Le clef existe déjà");
+			if (currentLearner.GetComponent<UserModel>().balanceFailWin[vecComp] + point < 0)
+			{
+				currentLearner.GetComponent<UserModel>().balanceFailWin[vecComp] = 0;
 			}
             else
             {
-				currentLearner.GetComponent<UserModel>().balanceFailWin[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] += point;
+				currentLearner.GetComponent<UserModel>().balanceFailWin[vecComp] += point;
 			}
 		}
+		foreach(KeyValuePair <List<bool>, float> actionl in currentLearner.GetComponent<UserModel>().balanceFailWin)
+		{
+			Debug.Log( "" + actionl.Key + " : " + currentLearner.GetComponent<UserModel>().balanceFailWin[actionl.Key]);
+		}
+
 
 		// Si on a travailler qu'une seul compétence, on ne touche pas au niveau de difficulté
 		int nbTrainCompetence = 0;
@@ -239,13 +277,32 @@ public class UserModelSystem : FSystem {
 		Debug.Log(currentLearner.GetComponent<UserModel>().levelHardProposition[1]);
 		Debug.Log(currentLearner.GetComponent<UserModel>().levelHardProposition[2]);
 
-		// On valide une compétence (ou un ensemble de compétence) lorsque le résultat de la balance est à au moins 4
-		if (currentLearner.GetComponent<UserModel>().balanceFailWin[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] >= 4)
-        {
+		// On valide une compétence (ou un ensemble de compétence) lorsque le résultat de la balance est à au moins 5
+		if (currentLearner.GetComponent<UserModel>().balanceFailWin[vecComp] >= 5)
+		{
 			Debug.Log("Validation compétence");
-			currentLearner.GetComponent<UserModel>().learningState[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] = true;
+			//currentLearner.GetComponent<UserModel>().learningState[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] = true;
+			currentLearner.GetComponent<UserModel>().learningState[vecComp] = true;
 			currentLearner.GetComponent<UserModel>().newCompetenceValideVector = infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence;
 			currentLearner.GetComponent<UserModel>().newCompetenceValide = true;
+
+			// Si une seul compétence travaillé, alor on valide cettec ompétence ausssi dans le suivit de l'etat de l'apprenant
+			int nbCompVal = 0;
+			int indice = -1;
+			int i = 0;
+            foreach (bool b in vecComp)
+            {
+                if (b)
+                {
+					nbCompVal += 1;
+					indice = i;
+				}
+				i++;
+            }
+			if(nbCompVal == 1)
+            {
+				currentLearner.GetComponent<UserModel>().stepLearning[indice] = true;
+			}
 		}
 	}
 }
