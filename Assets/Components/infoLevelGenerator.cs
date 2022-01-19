@@ -14,4 +14,6 @@ public class infoLevelGenerator : MonoBehaviour {
 	public bool sendPara;
 	// Défini si un nouveau level à été lancé
 	public bool newLevelGen;
+	// Précise si des options on été choisis
+	public bool optionOk;
 }

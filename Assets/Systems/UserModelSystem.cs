@@ -16,7 +16,6 @@ public class UserModelSystem : FSystem {
 	private GameObject currentLearner;
 
 	// Other
-	bool debugSystem = true;
 	bool testSolution = false;
 	private GameObject editableContainer; // L'objet qui continent la liste d'instruction créer par l'utilisateur, contient un enfant des le début (la barre rouge)
 	GameObject infoLevelGen;
@@ -29,7 +28,6 @@ public class UserModelSystem : FSystem {
 			if(editableScriptContainer_f.Count  > 0)
             {
 				editableContainer = editableScriptContainer_f.First(); // On récupére le container d'action éditable
-				Debug.Log("nb enfant au début : " + editableContainer.transform.childCount);
 			}
 			infoLevelGen = infoLevel_F.First(); // On récupére le gameobject contenant les infos du niveau
 
@@ -61,6 +59,8 @@ public class UserModelSystem : FSystem {
         {
 			// On lance la maj du model
 			endLevelMajModel();
+			// Puis on réinitialise le model
+			infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen = true;
 		}
 	}
 
@@ -70,7 +70,6 @@ public class UserModelSystem : FSystem {
 		// On réinitialise le level
 		if (infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen)
 		{
-			Debug.Log("Initialisation  du level du model dans la génération de niveau");
 			infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen = false; // pour éviter d'initialiser à chaque fois qu'on recommence le niveau en cours
 
 			currentLearner.GetComponent<UserModel>().meanLevelTime = 0.0f;
@@ -88,10 +87,6 @@ public class UserModelSystem : FSystem {
 	// on l'ajoute ensuite au totalLevelTime
 	public void playLevelActivated()
 	{
-		if (debugSystem)
-        {
-			Debug.Log("play level activated : UserModelSysteme");
-		}
 		// Permet d'arréter de compter le temp passer à créer sa liste d'action
 		testSolution = true;
 		timerResolution();
@@ -193,7 +188,6 @@ public class UserModelSystem : FSystem {
         // Si le vecteur compétence n'est pas encore présent on l'ajoutedans le suivis de la balance ET dans le dictionnaire de compétence
         if (!vecPresent)
 		{
-			Debug.Log("On ajoute le vec comp en tant que clef");
 			if (point < 0)
             {
 				point = 0;
@@ -203,7 +197,6 @@ public class UserModelSystem : FSystem {
 		}
 		else // sinon on met juste à jour la valeur en faisant attention de ne pas avoir de valeur négative
 		{
-			Debug.Log("Le clef existe déjà");
 			if (currentLearner.GetComponent<UserModel>().balanceFailWin[vecComp] + point < 0)
 			{
 				currentLearner.GetComponent<UserModel>().balanceFailWin[vecComp] = 0;
@@ -212,10 +205,6 @@ public class UserModelSystem : FSystem {
             {
 				currentLearner.GetComponent<UserModel>().balanceFailWin[vecComp] += point;
 			}
-		}
-		foreach(KeyValuePair <List<bool>, float> actionl in currentLearner.GetComponent<UserModel>().balanceFailWin)
-		{
-			Debug.Log( "" + actionl.Key + " : " + currentLearner.GetComponent<UserModel>().balanceFailWin[actionl.Key]);
 		}
 
 
@@ -266,22 +255,16 @@ public class UserModelSystem : FSystem {
 				{
 					if (infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[i])
 					{
+						Debug.Log("update dificulté");
 						currentLearner.GetComponent<UserModel>().levelHardProposition[i] = infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel;
 					}
 				}
 			}
 		}
 
-		Debug.Log("Niveau dificulté : ");
-		Debug.Log(currentLearner.GetComponent<UserModel>().levelHardProposition[0]);
-		Debug.Log(currentLearner.GetComponent<UserModel>().levelHardProposition[1]);
-		Debug.Log(currentLearner.GetComponent<UserModel>().levelHardProposition[2]);
-
 		// On valide une compétence (ou un ensemble de compétence) lorsque le résultat de la balance est à au moins 5
 		if (currentLearner.GetComponent<UserModel>().balanceFailWin[vecComp] >= 5)
 		{
-			Debug.Log("Validation compétence");
-			//currentLearner.GetComponent<UserModel>().learningState[infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence] = true;
 			currentLearner.GetComponent<UserModel>().learningState[vecComp] = true;
 			currentLearner.GetComponent<UserModel>().newCompetenceValideVector = infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence;
 			currentLearner.GetComponent<UserModel>().newCompetenceValide = true;

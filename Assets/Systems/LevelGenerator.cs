@@ -140,8 +140,6 @@ public class LevelGenerator : FSystem {
 			actionCreation.Add("If", 0);
 			actionCreation.Add("For", 0);
 
-			// Pour les tests
-			Debug.Log("nombre de learn : " + modelLearner_f.Count);
 
 			if (gameData.levelToLoad.Item1 != "generique")
 			{
@@ -832,26 +830,11 @@ public class LevelGenerator : FSystem {
 
 		infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
 
-		// Définie la difficulté du niveau
-		choiceParameterLevel();
-
-		// Parametrage du niveau juste avan la création
-
-
-
-		//séquence : suite de couloir
-
-		// while : répétition de couloir + couloir OU couloir + piéce avec + porte possible dans tous les cas -> metre des actions que pour un morceau avant répétition
-
-		//If...then : ajouter deux portes (ou plus) pour une seul action d'ouverture (si while), sinon mettre robot
-
-		//Négation : mettre un ou deux action inverse
-
-		//Console : Pas d'action déplacable tous à la console
-
-		//difficulté 3 mettre de fausses actions en trop
-
-
+        // Définie la difficulté du niveau si pas d'option
+        if (!infoLevelGen.GetComponent<infoLevelGenerator>().optionOk)
+        {
+			choiceParameterLevel();
+		}
 
 		//Variable pour la création
 		gameData.totalActionBloc = 0;

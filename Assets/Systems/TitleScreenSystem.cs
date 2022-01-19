@@ -25,6 +25,8 @@ public class TitleScreenSystem : FSystem {
 	//Chargement des famille
 	private Family modelLearner = FamilyManager.getFamily(new AnyOfComponents(typeof(UserModel)));
 	private Family infoLevel_F = FamilyManager.getFamily(new AnyOfComponents(typeof(infoLevelGenerator)));
+	private Family proceduralOptionMenu_f = FamilyManager.getFamily(new AnyOfComponents(typeof(ProceduralOptionMenu))); // récupére le menu d'option pour la génération procédural
+	private Family proceduralOptionCheckBox_f = FamilyManager.getFamily(new AnyOfComponents(typeof(ProceduralOptionCheckbox))); // récupére les checkBox des otpion pour la génération procédural
 
 	public TitleScreenSystem(){
 		if (Application.isPlaying)
@@ -174,14 +176,142 @@ public class TitleScreenSystem : FSystem {
 		GameObjectManager.loadScene("MainScene");
 	}
 
-	//Load the scene for generation lvl test
-	public void genLvlTest()
+	// Fait apparaitre le panel des options pour la génération de niveau
+	// Les compétences acquise ou en cours d'acquisistion sont présent
+	public void genLvlProcedural()
     {
+		// On active le menu d'option  pour la génération procédural
+		foreach(GameObject menu in proceduralOptionMenu_f)
+        {
+			menu.SetActive(true);
+        }
+
+		// On parcourt les chekbox, on active la premiére (le jeu choisis) et désactive les autres
+		foreach (GameObject checkbox in proceduralOptionCheckBox_f)
+		{
+			if(checkbox.name == "aleaToggle")
+            {
+				checkbox.GetComponent<Toggle>().isOn = true;
+			}
+            else
+            {
+				// On ne laisse aparaitre que les compétences possible
+
+				//si le nom = vector comp + comp possible
+				checkbox.GetComponent<Toggle>().isOn = false;
+			}
+
+            if (checkbox.name == "sequenceToggle" || checkbox.name == "aleaToggle")
+            {
+				checkbox.SetActive(true);
+			}
+			else if(checkbox.name == "loopToggle" && model.GetComponent<UserModel>().stepLearning[0])
+            {
+				checkbox.SetActive(true);
+			}
+			else if (checkbox.name == "conditionToggle" && model.GetComponent<UserModel>().stepLearning[0])
+			{
+				checkbox.SetActive(true);
+			}
+			else if (checkbox.name == "negationToggle" && model.GetComponent<UserModel>().stepLearning[1])
+			{
+				checkbox.SetActive(true);
+			}
+			else if (checkbox.name == "consoleToggle" && model.GetComponent<UserModel>().stepLearning[0])
+			{
+				checkbox.SetActive(true);
+			}
+            else
+            {
+				checkbox.SetActive(false);
+			}
+		}
+
+	}
+
+	// Lance la génération aléatoire selon les options choisis
+	public void loadSceneForProceduralGeneration()
+    {
+		int nbOption = 0;
+
+		// récuperer les options selectionné
+		foreach (GameObject checkbox in proceduralOptionCheckBox_f)
+		{
+
+			if (checkbox.name == "sequenceToggle" && checkbox.GetComponent<Toggle>().isOn)
+			{
+				foreach (GameObject go in infoLevel_F)
+				{
+					go.GetComponent<infoLevelGenerator>().vectorCompetence[0] = true;
+				}
+				nbOption++;
+			}
+			else if (checkbox.name == "loopToggle" && checkbox.GetComponent<Toggle>().isOn)
+			{
+				foreach (GameObject go in infoLevel_F)
+				{
+					go.GetComponent<infoLevelGenerator>().vectorCompetence[1] = true;
+				}
+				nbOption++;
+			}
+			else if (checkbox.name == "conditionToggle" && checkbox.GetComponent<Toggle>().isOn)
+			{
+				foreach (GameObject go in infoLevel_F)
+				{
+					go.GetComponent<infoLevelGenerator>().vectorCompetence[2] = true;
+				}
+				nbOption++;
+			}
+			else if (checkbox.name == "negationToggle" && checkbox.GetComponent<Toggle>().isOn)
+			{
+				foreach (GameObject go in infoLevel_F)
+				{
+					go.GetComponent<infoLevelGenerator>().vectorCompetence[3] = true;
+				}
+				nbOption++;
+			}
+			else if (checkbox.name == "consoleToggle" && checkbox.GetComponent<Toggle>().isOn)
+			{
+				foreach (GameObject go in infoLevel_F)
+				{
+					go.GetComponent<infoLevelGenerator>().vectorCompetence[4] = true;
+				}
+				nbOption++;
+			}
+
+			int hardLevel = 1;
+			// On attribut le niveau de difficulté selon le nombre d'option prise
+			if(nbOption == 2 || nbOption == 3)
+            {
+				hardLevel = 2;
+			}
+			if (nbOption > 3)
+			{
+				hardLevel = 3;
+			}
+
+			foreach (GameObject go in infoLevel_F)
+			{
+				go.GetComponent<infoLevelGenerator>().newLevelGen = true;
+				if(nbOption > 0)
+                {
+					go.GetComponent<infoLevelGenerator>().hardLevel = hardLevel;
+					go.GetComponent<infoLevelGenerator>().optionOk = true;
+				}
+                else
+                {
+					go.GetComponent<infoLevelGenerator>().optionOk = false;
+				}
+			}
+			gameData.levelToLoad = ("generique", 1);
+			GameObjectManager.loadScene("MainScene");
+		}
+
 		gameData.levelToLoad = ("generique", 1);
 		Debug.Log("Generation procedural");
 		// On informe dans level info que l'on créer un nouveau niveau proceduralement
-		foreach(GameObject go in infoLevel_F)
-        {
+		foreach (GameObject go in infoLevel_F)
+		{
 			go.GetComponent<infoLevelGenerator>().newLevelGen = true;
 		}
 		GameObjectManager.loadScene("MainScene");
@@ -270,11 +400,14 @@ public class TitleScreenSystem : FSystem {
 	// Initialise les infos de level gen
 	private void initInfoLevelGen()
     {
-		infoLevelGen.GetComponent<infoLevelGenerator>().nbActionMin = 0;
-		infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence = new List<bool>();
-		infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel = 1; //  Niveau 1 par defaut
-		infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = false;
-		infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen = true;
+		foreach (GameObject go in infoLevel_F)
+		{
+			go.GetComponent<infoLevelGenerator>().nbActionMin = 0;
+			go.GetComponent<infoLevelGenerator>().vectorCompetence = new List<bool> { false, false, false, false, false };
+			go.GetComponent<infoLevelGenerator>().hardLevel = 1; //  Niveau 1 par defaut
+			go.GetComponent<infoLevelGenerator>().sendPara = false;
+			go.GetComponent<infoLevelGenerator>().newLevelGen = true;
+		}
 	}
 
 	// See Quitter button in editor
