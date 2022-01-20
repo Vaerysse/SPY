@@ -21,6 +21,7 @@ public class TitleScreenSystem : FSystem {
 
 	private GameObject infoLevelGen;
 	private GameObject model;
+	private string nameLearner;
 
 	//Chargement des famille
 	private Family modelLearner = FamilyManager.getFamily(new AnyOfComponents(typeof(UserModel)));
@@ -39,14 +40,28 @@ public class TitleScreenSystem : FSystem {
 			backButton = GameObject.Find("Retour");
 			buttonLvlGenerator = GameObject.Find("LvlGenerator");
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("GameData"));
-			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("Learner")); // Permet de garder l'objet contenant la modélisation de l'apprenant entre chaque scéne
 			GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("infoLevelGen")); // Permet de garder l'objet contenant les information des niveau scréer procéduralement entre chaque scéne
 
 			Debug.Log("nombre de learn : " + modelLearner.Count);
 
 			//Initialisation des infomations de suivis de niveau
 			infoLevelGen = infoLevel_F.First();
-			model = modelLearner.First();
+			if (modelLearner.Count == 1)
+            {
+				foreach (GameObject go in modelLearner)
+				{
+					go.GetComponent<UserModel>().learnerName = "Current User";
+				}
+				GameObjectManager.dontDestroyOnLoadAndRebind(GameObject.Find("Learner")); // Permet de garder l'objet contenant la modélisation de l'apprenant entre chaque scéne
+			}
+			foreach(GameObject go in modelLearner)
+            {
+				if(go.GetComponent<UserModel>().learnerName != "NewUser")
+                {
+					model = go;
+				}
+			}
+			loadAndSave();
 			initInfoLevelGen();
 			initModelLearn();
 
@@ -343,13 +358,9 @@ public class TitleScreenSystem : FSystem {
 	// Initialise le model learner
 	private void initModelLearn()
     {
-		Debug.Log("Initialisation du model");
 		// Si initOk = false, alors c'est le premier chargement du model il faut initialiser les variable concernant l'apprenant en plus de ceux du suivant de l'apprantissage du niveau
 		if (!model.GetComponent<UserModel>().initOk)
 		{
-			Debug.Log("Initialisation  Général du model");
-			model.GetComponent<UserModel>().learnerName = "Test learner ok";
-
 			List<bool> listLearn = new List<bool>();
 			listLearn.Add(false); // Sequence
 			listLearn.Add(false); // While
@@ -384,8 +395,6 @@ public class TitleScreenSystem : FSystem {
 		// On réinitialise le level
 		if (infoLevelGen.GetComponent<infoLevelGenerator>().newLevelGen)
 		{
-			Debug.Log("Initialisation  du level du model");
-
 			model.GetComponent<UserModel>().meanLevelTime = 0.0f;
 			model.GetComponent<UserModel>().timeStart = 0.0f;
 			model.GetComponent<UserModel>().totalLevelTime = 0.0f;
@@ -408,6 +417,103 @@ public class TitleScreenSystem : FSystem {
 			go.GetComponent<infoLevelGenerator>().sendPara = false;
 			go.GetComponent<infoLevelGenerator>().newLevelGen = true;
 		}
+	}
+
+	// Charge le profil de l'apprenant si il n'est pas encore charger, si il n'y a pas de profil dans le dosier, en créer un nouveau vide
+	private void loadAndSave()
+    {
+		foreach (GameObject go in modelLearner)
+		{
+			// Si le model à déjà été chargé, on sauvegarde
+			if (go.GetComponent<UserModel>().loadModel)
+			{
+				Debug.Log("Model déjà chargé, on save");
+				saveLearnerModel(go.GetComponent<UserModel>().learnerName);
+			}// Sinon on charge le model
+			else
+			{
+				Debug.Log("Pas de model charger, on load");
+				loadLearnerModel();
+				go.GetComponent<UserModel>().loadModel = true;
+			}
+		}
+    }
+
+	// Sauvegarde la modelisation du joueur
+	private void saveLearnerModel(string name)
+    {
+		if(model.GetComponent<UserModel>().learnerName != "NewUser")
+        {
+			try
+			{
+				string jsonModel = JsonUtility.ToJson(model.GetComponent<UserModel>());
+				System.IO.File.WriteAllText("E:/Unity_project/SPY/Assets/StreamingAssets/User/LearnerModel.json", jsonModel);
+			}
+			catch
+			{
+				Debug.Log("Probléme lors de la sauvegarde du model!");
+			}
+		}
+    }
+
+	// Charge le model présent dans le dossieur Asset/StreamingAssets/User
+	private void loadLearnerModel()
+    {
+		try
+		{
+			StreamReader reader = new StreamReader("E:/Unity_project/SPY/Assets/StreamingAssets/User/LearnerModel.json");
+			string jsonString = reader.ReadToEnd();
+			reader.Close();
+			UserModel modelTemp = new UserModel();
+			JsonUtility.FromJsonOverwrite(jsonString, modelTemp);
+			if(modelTemp.learningState == null)
+            {
+				model.GetComponent<UserModel>().learningState = new Dictionary<List<bool>, bool>();
+			}
+            else
+            {
+				model.GetComponent<UserModel>().learningState = modelTemp.learningState;
+			}
+
+			if(modelTemp.balanceFailWin == null)
+            {
+				model.GetComponent<UserModel>().balanceFailWin = new Dictionary<List<bool>, float>();
+			}
+            else
+            {
+				model.GetComponent<UserModel>().balanceFailWin = modelTemp.balanceFailWin;
+			}
+
+            if (modelTemp.followStateLearn == null)
+            {
+				Dictionary<int, List<int>> followStateLearn = new Dictionary<int, List<int>>();
+				followStateLearn.Add(0, new List<int>()); // Sequence
+				List<int> parent0 = new List<int>();
+				parent0.Add(0);
+				List<int> parent2 = new List<int>();
+				parent2.Add(2);
+				followStateLearn.Add(1, parent0); // While
+				followStateLearn.Add(2, parent0); // If...Then
+				followStateLearn.Add(3, parent2); // Negation
+				followStateLearn.Add(4, parent0); // Console
+				model.GetComponent<UserModel>().followStateLearn = followStateLearn;
+			}
+            else
+            {
+				model.GetComponent<UserModel>().followStateLearn = modelTemp.followStateLearn;
+			}
+
+			model.GetComponent<UserModel>().learnerName = modelTemp.learnerName;
+			model.GetComponent<UserModel>().stepLearning = modelTemp.stepLearning;
+			model.GetComponent<UserModel>().initOk = modelTemp.initOk;
+			model.GetComponent<UserModel>().loadModel = true;
+			model.GetComponent<UserModel>().levelHardProposition = modelTemp.levelHardProposition;
+		}
+		catch
+		{
+			Debug.Log("Pas de modelisation de l'apprenant");
+		}
+
 	}
 
 	// See Quitter button in editor

@@ -128,6 +128,7 @@ public class LevelGenerator : FSystem {
 			gameData.Level = GameObject.Find("Level");
 			scriptContainer = enemyScript.First();
 			infoLevelGen = infoLevelGen_f.First();
+			Debug.Log("nb model : " + modelLearner_f.Count);
 			model = modelLearner_f.First();
 
 			//Création du dictionaire pour la création procédurale des actions

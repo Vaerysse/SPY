@@ -2040,9 +2040,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaca14686f8000847bc9a2916847903c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  learnerName: Test Name
+  learnerName: NewUser
   stepLearning: 
   initOk: 0
+  loadModel: 0
   meanLevelTime: 0
   timeStart: 0
   totalLevelTime: 0

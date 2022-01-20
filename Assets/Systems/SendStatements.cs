@@ -17,6 +17,7 @@ public class SendStatements : FSystem {
 
 
     private bool activeTrace = false;
+    private GameData gameData;
 
     public SendStatements()
     {
@@ -25,6 +26,10 @@ public class SendStatements : FSystem {
             initGBLXAPI();
             currentLearner = GameObject.Find("Learner");
             infoLevelGen = GameObject.Find("infoLevelGen");
+            GameObject gameDataGO = GameObject.Find("GameData");
+            if (gameDataGO == null)
+                GameObjectManager.loadScene("TitleScreen");
+            gameData = gameDataGO.GetComponent<GameData>();
         }
         instance = this;
     }
@@ -94,14 +99,19 @@ public class SendStatements : FSystem {
         // Si le joueur à acquis une nouvelle compétence ou compétence croisé
         if (currentLearner.GetComponent<UserModel>().newCompetenceValide)
         {
+            newCompetenceValide();
+        }
 
+        //Losqu'un nouveau niveau aléatoire est créer
+        if (infoLevelGen.GetComponent<infoLevelGenerator>().sendPara)
+        {
+            paraLevelProcessCreation();
         }
 
     }
 
     public void testSendStatement()
     {
-        Debug.Log(GBL_Interface.playerName + " asks to send statement...");
         GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
         {
             verb = "interacted",
@@ -111,15 +121,15 @@ public class SendStatements : FSystem {
     }
 
     // Lorsque le joueur appuie sur le bouton play
-    // On envoie le temps écoulé pour avoir créer la sequence d'action + la liste des actions
+    // On envoie la liste des actions
     public void playLevelActivated()
     {
+
         if (activeTrace)
         {
-            Debug.Log("Play level activated : SendStatements");
             GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
             {
-                verb = "interacted",
+                verb = "started",
                 objectType = "menu",
                 objectName = "ExectuteActionList"
                 // ajouter data
@@ -133,7 +143,6 @@ public class SendStatements : FSystem {
     {
         if (activeTrace)
         {
-            Debug.Log("Reset level : SendStatements");
             GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
             {
                 verb = "interacted",
@@ -148,15 +157,23 @@ public class SendStatements : FSystem {
     // meanLevelTime, totalLevelTime, nbTry
     public void endLevel()
     {
+        string meanLevelTime = "" + currentLearner.GetComponent<UserModel>().meanLevelTime;
+        string totalLevelTime = "" + currentLearner.GetComponent<UserModel>().totalLevelTime;
+        string nbTry = "" + currentLearner.GetComponent<UserModel>().nbTry;
+
         if (activeTrace)
         {
-            Debug.Log("End level : SendStatements");
             GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
             {
-                verb = "interacted", // à changer
-                objectType = "menu", // à changer
-                objectName = "Data End Level" 
+                verb = "completed", // à changer
+                objectType = "level", // à changer
+                objectName = "Data End Level",
                 // ajouter donnée
+                activityExtensions = new Dictionary<string, string>() {
+                    { "meanLevelTime", meanLevelTime},
+                    { "totalLevelTime", totalLevelTime},
+                    { "nbTry", nbTry}
+                }
             });
         }
     }
@@ -165,15 +182,26 @@ public class SendStatements : FSystem {
     // On envoie le vecteur validé
     public void newCompetenceValide()
     {
+        currentLearner.GetComponent<UserModel>().newCompetenceValide = false;
+        string vectorCompetenc = "[";
+        vectorCompetenc = vectorCompetenc + currentLearner.GetComponent<UserModel>().stepLearning[0] + ",";
+        vectorCompetenc = vectorCompetenc + currentLearner.GetComponent<UserModel>().stepLearning[1] + ",";
+        vectorCompetenc = vectorCompetenc + currentLearner.GetComponent<UserModel>().stepLearning[2] + ",";
+        vectorCompetenc = vectorCompetenc + currentLearner.GetComponent<UserModel>().stepLearning[3] + ",";
+        vectorCompetenc = vectorCompetenc + currentLearner.GetComponent<UserModel>().stepLearning[4];
+        vectorCompetenc = vectorCompetenc + "]";
+
         if (activeTrace)
         {
-            Debug.Log("New competence valide : SendStatements");
             GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
             {
-                verb = "interacted", // à changer
-                objectType = "menu", // à changer
-                objectName = "New competence valide"
+                verb = "completed", // à changer
+                objectType = "progress", // à changer
+                objectName = "New competence valide",
                 // ajouter donnée newCompetenceValideVector
+                activityExtensions = new Dictionary<string, string>() {
+                    { "newVectorCompetence", vectorCompetenc}
+                }
             });
         }
 
@@ -187,16 +215,28 @@ public class SendStatements : FSystem {
     {
         // Remet la variable à false pour éviter des envoies succéssif
         infoLevelGen.GetComponent<infoLevelGenerator>().sendPara = false;
+        string hardLevel = "" + infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel;
+        string vectorCompetenc = "[";
+        vectorCompetenc = vectorCompetenc + infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[0] + ",";
+        vectorCompetenc = vectorCompetenc + infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[1] + ",";
+        vectorCompetenc = vectorCompetenc + infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[2] + ",";
+        vectorCompetenc = vectorCompetenc + infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[3] + ",";
+        vectorCompetenc = vectorCompetenc + infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[4];
+        vectorCompetenc = vectorCompetenc + "]";
 
         if (activeTrace)
         {
-            Debug.Log("Parameter Level Process Creation : SendStatements");
             GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
             {
-                verb = "interacted", // à changer
-                objectType = "menu", // à changer
-                objectName = "Parameter level creation process"
+                verb = "started",
+                objectType = "simulation",
+                objectName = "Parameter level creation process",
                 // ajouter donnée 
+                activityExtensions = new Dictionary<string, string>() {
+                    { "hardLevel", hardLevel},
+                    { "vectorCompetence", vectorCompetenc }
+                }
+
             });
         }
     }

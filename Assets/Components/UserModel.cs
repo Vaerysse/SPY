@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[System.Serializable]
 public class UserModel : MonoBehaviour {
 	// Advice: FYFY component aims to contain only public members (according to Entity-Component-System paradigm).
 
@@ -27,6 +28,8 @@ public class UserModel : MonoBehaviour {
 	// Variable pour l'initialisation du model
 	// Est ce que l'initialisation à déjà été faite
 	public bool initOk = false;
+	// Chargement du model lors du début du jeu
+	public bool loadModel = false;
 
 
 	//Les variables suivante servent lors du calcule de connaissance de la compéence en fin de niveau

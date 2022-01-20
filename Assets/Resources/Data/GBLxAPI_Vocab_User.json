@@ -4,7 +4,62 @@
     "content": {},
     "direction": {},
     "domain": {},
-    "extension": {},
+    "extension": {
+        "hardlevel": {
+            "description": {
+                "en-US": "difficult\u00e9 du niveau"
+            },
+            "id": "https://www.lip6.fr/mocah/invaliduri/extensions/hardlevel",
+            "name": {
+                "en-US": "hardlevel"
+            }
+        },
+        "meanleveltime": {
+            "description": {
+                "en-US": ""
+            },
+            "id": "https://www.lip6.fr/mocah/invaliduri/extensions/newvectorcompetencemeanleveltime",
+            "name": {
+                "en-US": "meanleveltime"
+            }
+        },
+        "nbtry": {
+            "description": {
+                "en-US": ""
+            },
+            "id": "https://www.lip6.fr/mocah/invaliduri/extensions/newvectorcompetencenbtry",
+            "name": {
+                "en-US": "nbtry"
+            }
+        },
+        "newvectorcompetence": {
+            "description": {
+                "en-US": "le vecteur de competence de l\u2019apprenant"
+            },
+            "id": "https://www.lip6.fr/mocah/invaliduri/extensions/newvectorcompetence",
+            "name": {
+                "en-US": "newvectorcompetence"
+            }
+        },
+        "totalleveltime": {
+            "description": {
+                "en-US": ""
+            },
+            "id": "https://www.lip6.fr/mocah/invaliduri/extensions/newvectorcompetencetotalleveltime",
+            "name": {
+                "en-US": "totalleveltime"
+            }
+        },
+        "vectorcompetence": {
+            "description": {
+                "en-US": "vecteur de competence travailler dans le niveau"
+            },
+            "id": "https://www.lip6.fr/mocah/invaliduri/extensions/vectorcompetence",
+            "name": {
+                "en-US": "vectorcompetence"
+            }
+        }
+    },
     "focus": {},
     "grade": {},
     "link": {},
