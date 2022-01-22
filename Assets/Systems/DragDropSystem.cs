@@ -49,8 +49,10 @@ public class DragDropSystem : FSystem
 	private bool stackchanged = false;
 	private bool infor = false;
 	private bool inif = false;
-	private List<GameObject> looplist = new List<GameObject>();
-	private GameObject target;
+	private List<UnityEngine.Transform> looplist = new List<UnityEngine.Transform>();
+	private UnityEngine.Transform target;
+	private UnityEngine.Transform tconsole;
+	private List<UnityEngine.Transform> lconsole = new List<UnityEngine.Transform>();
 
 	//double click
 	private float lastClickTime;
@@ -115,56 +117,35 @@ public class DragDropSystem : FSystem
 				oldText = consoleText;
 				using (var reader = new StringReader(consoleText))
 				{
+					looplist.Clear();
+					looplist.Add(editableContainer.transform);
 					for (string line = reader.ReadLine(); line != null; line = reader.ReadLine())
 					{
-						if (looplist.Count == 0)
-						{
-							target = editableContainer;
-						}
-						else
-						{
-							if (line.Length >= looplist.Count)
+						if (line.Length >= looplist.Count)
+                        {
+							int nbtab = 0;
+							foreach(char c in line)
                             {
-								int nbtab = 0;
-								foreach(char c in line)
+								if (c == '\t')
                                 {
-									if (c == '\t')
-                                    {
-										nbtab += 1;
-                                    }
-                                }
-								if (nbtab == looplist.Count)
-                                {
-									target = looplist[nbtab];
-                                }
-                                else
-                                {
-									if (nbtab< looplist.Count)
-                                    {
-										int difftab = looplist.Count - nbtab;
-										for (int f=0; f< difftab; f++)
-                                        {
-											GameObject looptoput;
-											GameObject looptoclose = looplist[looplist.Count - 1];
-											if (looplist.Count > 1)
-                                            {
-												 looptoput = looplist[looplist.Count - 2];
-											}
-                                            else
-                                            {
-												looptoput = editableContainer;
-											}
-											looptoclose.transform.SetParent(looptoput.transform);
-
-										}
-                                    }
+									nbtab += 1;
                                 }
                             }
-			
-			}
+							Debug.Log(looplist.Count);
+							Debug.Log(nbtab);
+							target = looplist[nbtab];
+							if (nbtab< looplist.Count-1)
+                            {
+								int difftab = looplist.Count-1 - nbtab;
+								Debug.Log(difftab);
+								for (int f=0; f< difftab; f++)
+                                {
+									looplist.RemoveAt(looplist.Count - 1);
 
-
-						line=line.Replace("\t", "");
+								}
+                            }
+                        }			
+						line =line.Replace("\t", "");
 						//clear instruction
 						if (line.Length >= 5)
 						{
@@ -275,7 +256,7 @@ public class DragDropSystem : FSystem
 									GameObject prefab = go.GetComponent<ElementToDrag>().actionPrefab;
 									GameObject item = UnityEngine.Object.Instantiate<GameObject>(prefab);
 									BaseElement action = item.GetComponent<BaseElement>();
-									item.transform.SetParent(target.transform);
+									item.transform.SetParent(target);
 									foreach (BaseElement actChild in item.GetComponentsInChildren<BaseElement>())
 										GameObjectManager.addComponent<Dropped>(actChild.gameObject);
 
@@ -285,7 +266,6 @@ public class DragDropSystem : FSystem
 
 									if (item.GetComponent<UITypeContainer>())
 										item.GetComponent<Image>().raycastTarget = true;
-									target.transform.parent.parent.GetComponent<AudioSource>().Play();
 									refreshUI();
 								}
 							}
@@ -303,7 +283,7 @@ public class DragDropSystem : FSystem
 									GameObject go = draggableElement.getAt(1);
 									GameObject prefab = go.GetComponent<ElementToDrag>().actionPrefab;
 									GameObject item = UnityEngine.Object.Instantiate<GameObject>(prefab);
-									item.transform.SetParent(target.transform);
+									item.transform.SetParent(target);
 									foreach (BaseElement actChild in item.GetComponentsInChildren<BaseElement>())
 										GameObjectManager.addComponent<Dropped>(actChild.gameObject);
 
@@ -313,7 +293,6 @@ public class DragDropSystem : FSystem
 									GameObjectManager.addComponent<Dragged>(item);
 									if (item.GetComponent<UITypeContainer>())
 										item.GetComponent<Image>().raycastTarget = true;
-									target.transform.parent.parent.GetComponent<AudioSource>().Play();
 									refreshUI();
 								}
 							}
@@ -330,7 +309,7 @@ public class DragDropSystem : FSystem
 									GameObject go = draggableElement.getAt(2);
 									GameObject prefab = go.GetComponent<ElementToDrag>().actionPrefab;
 									GameObject item = UnityEngine.Object.Instantiate<GameObject>(prefab);
-									item.transform.SetParent(target.transform);
+									item.transform.SetParent(target);
 									foreach (BaseElement actChild in item.GetComponentsInChildren<BaseElement>())
 										GameObjectManager.addComponent<Dropped>(actChild.gameObject);
 
@@ -341,7 +320,6 @@ public class DragDropSystem : FSystem
 
 									if (item.GetComponent<UITypeContainer>())
 										item.GetComponent<Image>().raycastTarget = true;
-									target.transform.parent.parent.GetComponent<AudioSource>().Play();
 									refreshUI();
 								}
 							}
@@ -356,7 +334,7 @@ public class DragDropSystem : FSystem
 								GameObject prefab = go.GetComponent<ElementToDrag>().actionPrefab;
 								GameObject item = UnityEngine.Object.Instantiate<GameObject>(prefab);
 
-								item.transform.SetParent(target.transform);
+								item.transform.SetParent(target);
 								foreach (BaseElement actChild in item.GetComponentsInChildren<BaseElement>())
 									GameObjectManager.addComponent<Dropped>(actChild.gameObject);
 
@@ -367,7 +345,6 @@ public class DragDropSystem : FSystem
 
 								if (item.GetComponent<UITypeContainer>())
 									item.GetComponent<Image>().raycastTarget = true;
-								target.transform.parent.parent.GetComponent<AudioSource>().Play();
 								refreshUI();
 
 
@@ -385,7 +362,7 @@ public class DragDropSystem : FSystem
 									GameObject go = draggableElement.getAt(3);
 									GameObject prefab = go.GetComponent<ElementToDrag>().actionPrefab;
 									GameObject item = UnityEngine.Object.Instantiate<GameObject>(prefab);
-									item.transform.SetParent(target.transform);
+									item.transform.SetParent(target);
 									foreach (BaseElement actChild in item.GetComponentsInChildren<BaseElement>())
 										GameObjectManager.addComponent<Dropped>(actChild.gameObject);
 
@@ -396,7 +373,6 @@ public class DragDropSystem : FSystem
 
 									if (item.GetComponent<UITypeContainer>())
 										item.GetComponent<Image>().raycastTarget = true;
-									target.transform.parent.parent.GetComponent<AudioSource>().Play();
 									refreshUI();
 								}
 							}
@@ -443,14 +419,20 @@ public class DragDropSystem : FSystem
 										fgo = true;
                                     }
                                 }
+
+
+
 								int diff = Int32.Parse(lastnb) - Int32.Parse(fistnb);
 								GameObject go = draggableElement.getAt(7);
 								GameObject prefab = go.GetComponent<ElementToDrag>().actionPrefab;
 								GameObject item = UnityEngine.Object.Instantiate<GameObject>(prefab);
-								BaseElement action = item.GetComponent<BaseElement>();
-								
-								foreach (BaseElement actChild in item.GetComponentsInChildren<BaseElement>())
-									GameObjectManager.addComponent<Dropped>(actChild.gameObject);
+								ForAction action = item.GetComponent<ForAction>();
+
+								action.nbFor = diff;
+								action.transform.GetChild(0).GetChild(1).GetComponent<TMP_InputField>().text = (diff).ToString();
+								item.transform.SetParent(target.transform);
+
+
 
 								action.target = item;
 								GameObjectManager.bind(item);
@@ -458,10 +440,128 @@ public class DragDropSystem : FSystem
 
 								if (item.GetComponent<UITypeContainer>())
 									item.GetComponent<Image>().raycastTarget = true;
-								target.transform.parent.parent.GetComponent<AudioSource>().Play();
 								refreshUI();
+
+								looplist.Add(action.transform);
 							}
 							
+                        }
+
+						//if instruction
+						if (line.Length > 2)
+                        {
+                            string[] k = line.Split(' ');
+							if (k[0]=="if")
+                            {
+								GameObject go = draggableElement.getAt(6);
+								GameObject prefab = go.GetComponent<ElementToDrag>().actionPrefab;
+								GameObject item = UnityEngine.Object.Instantiate<GameObject>(prefab);
+								IfAction action = item.GetComponent<IfAction>();
+								Debug.Log("start");
+								Debug.Log(action.transform.GetChild(0).childCount);
+								Debug.Log(action.transform.GetChild(0).GetChild(2).GetType());
+								Debug.Log(action.transform.GetChild(0).GetChild(2).GetComponent<TMP_Dropdown>().value);
+								Debug.Log("fin");
+								int notif = 0;
+								if (k.Length > 2)
+								{
+									if (k[1]== "not")
+									{
+										notif=1;
+										action.ifNot = true;
+										action.transform.GetChild(0).GetChild(2).GetComponent<TMP_Dropdown>().value = 1;
+
+									}
+                                    else
+                                    {
+										action.ifNot = false;
+										action.transform.GetChild(0).GetChild(2).GetComponent<TMP_Dropdown>().value = 0;
+									}
+								}
+
+								if (k.Length > notif + 2)
+								{
+									if (k[notif + 1] == "wall")
+									{
+										action.ifEntityType = 0;
+										action.transform.GetChild(0).GetChild(1).GetComponent<TMP_Dropdown>().value = 0;
+
+									}
+									if (k[notif + 1] == "door")
+									{
+										action.ifEntityType = 1;
+										action.transform.GetChild(0).GetChild(1).GetComponent<TMP_Dropdown>().value = 1;
+
+									}
+									if (k[notif + 1] == "enemy")
+									{
+										action.ifEntityType = 2;
+										action.transform.GetChild(0).GetChild(1).GetComponent<TMP_Dropdown>().value = 2;
+
+									}
+									if (k[notif + 1] == "ally")
+									{
+										action.ifEntityType = 3;
+										action.transform.GetChild(0).GetChild(1).GetComponent<TMP_Dropdown>().value = 3;
+
+									}
+									if (k[notif + 1] == "console")
+									{
+										action.ifEntityType = 4;
+										action.transform.GetChild(0).GetChild(1).GetComponent<TMP_Dropdown>().value = 4;
+
+									}
+									if (k[notif + 1] == "coin")
+									{
+										action.ifEntityType = 5;
+										action.transform.GetChild(0).GetChild(1).GetComponent<TMP_Dropdown>().value = 6;
+
+									}
+									if (k.Length > notif + 4)
+									{
+										action.range = Int32.Parse(k[notif + 3]);
+                                        int range = action.range;
+										action.transform.GetChild(0).GetChild(7).GetComponent<TMP_InputField>().text = (range).ToString();
+										if (k.Length >= notif + 6)
+										{
+											if (k[notif + 5] == "forward")
+											{
+												action.ifDirection = 0;
+												action.transform.GetChild(0).GetChild(8).GetComponent<TMP_Dropdown>().value = 0;
+
+											}
+											if (k[notif + 5] == "behind")
+											{
+												action.ifDirection = 1;
+												action.transform.GetChild(0).GetChild(8).GetComponent<TMP_Dropdown>().value = 1;
+											}
+											if (k[notif + 5] == "left")
+											{
+												action.ifDirection = 2;
+												action.transform.GetChild(0).GetChild(8).GetComponent<TMP_Dropdown>().value = 2;
+											}
+											if (k[notif + 5] == "right")
+											{
+												action.ifDirection = 3;
+												action.transform.GetChild(0).GetChild(8).GetComponent<TMP_Dropdown>().value = 3;
+											}
+
+											item.transform.SetParent(target.transform);
+
+											action.target = item;
+											GameObjectManager.bind(item);
+											GameObjectManager.addComponent<Dragged>(item);
+
+											if (item.GetComponent<UITypeContainer>())
+												item.GetComponent<Image>().raycastTarget = true;
+											refreshUI();
+											looplist.Add(action.transform);
+										
+									}
+									}
+								}
+
+							}
                         }
 
 						//Run instruction (deos not work)
@@ -479,7 +579,7 @@ public class DragDropSystem : FSystem
 		}
 
 		//Mouse down
-		// On fait glisser une action selectionner tant que le bouton gauche de la souris est enfoncé
+		// On fait glisser une action selectionner tant que le bouton gauche de la souris est enfoncï¿½
 		if (Input.GetMouseButtonDown(0) && !Input.GetMouseButtonUp(0))
 		{ //focus in play mode (unity editor) could be up and down !!! (bug unity)
 		  //manage click on library
@@ -766,10 +866,277 @@ public class DragDropSystem : FSystem
 						input.MoveTextEnd(false);
 					}
 				}
+				Debug.Log(stack);
+				if (stack == "ForBloc(Clone)")
+                {
+					ForLoop(editableContainer.transform.GetChild(i-1), input, 0);
+                }
+
+				if (stack== "IfDetectBloc(Clone)")
+                {
+					IfLoop(editableContainer.transform.GetChild(i - 1), input, 0);
+                }
 				nbrecur = 1;
 				stack = editableContainer.transform.GetChild(i).name;
 			}
 
+		}
+	}
+
+	public void ForLoop(UnityEngine.Transform forloop, TMP_InputField inputi, int nbtabs)
+	{
+		inputi.text = inputi.text + "for i in range (0," + forloop.GetComponent<ForAction>().transform.GetChild(0).GetChild(1).GetComponent<TMP_InputField>().text + ")\n";
+		inputi.MoveTextEnd(false);
+		string stack = "";
+		int nbrecur = 0;
+		string tabs = "";
+		for (int k = 0; k < nbtabs + 1; k++)
+        {
+			tabs += "\t";
+        }
+		for (int i = 0; i < forloop.childCount; i++)
+		{
+			if (stack == forloop.GetChild(i).name)
+			{
+				nbrecur += 1;
+			}
+			else
+			{
+				if (stack == "ForwardActionBloc(Clone)")
+				{
+					inputi.text = inputi.text + tabs+ "MoveForward(" + nbrecur + ")\n";
+					input.MoveTextEnd(false);
+				}
+				if (stack == "TurnLeftActionBloc(Clone)")
+				{
+					inputi.text = inputi.text + tabs + "TurnLeft(" + nbrecur + ")\n";
+					input.MoveTextEnd(false);
+				}
+				if (stack == "TurnRightActionBloc(Clone)")
+				{
+					inputi.text = inputi.text + tabs + "TurnRight(" + nbrecur + ")\n";
+					input.MoveTextEnd(false);
+				}
+				if (stack == "WaitActionBloc(Clone)")
+				{
+					inputi.text = inputi.text + tabs + "Wait(" + nbrecur + ")\n";
+					input.MoveTextEnd(false);
+				}
+				if (stack == "ActivateActionBloc(Clone)")
+				{
+					for (int j = 0; j < nbrecur; j++)
+					{
+						inputi.text = inputi.text + tabs + "Activate()\n";
+						inputi.MoveTextEnd(false);
+					}
+				}
+				if (stack == "ForBloc(Clone)")
+				{
+					ForLoop(editableContainer.transform.GetChild(i - 1), input, nbtabs+1);
+				}
+				if (stack == "IfDetectBloc(Clone)")
+				{
+					IfLoop(editableContainer.transform.GetChild(i - 1), input, nbtabs+1);
+				}
+				nbrecur = 1;
+				stack = forloop.GetChild(i).name;
+			}
+		}
+		if (stack == "ForwardActionBloc(Clone)")
+		{
+			inputi.text = inputi.text + tabs + "MoveForward(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "TurnLeftActionBloc(Clone)")
+		{
+			inputi.text = inputi.text + tabs + "TurnLeft(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "TurnRightActionBloc(Clone)")
+		{
+			inputi.text = inputi.text + tabs + "TurnRight(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "WaitActionBloc(Clone)")
+		{
+			inputi.text = inputi.text + tabs + "Wait(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "ActivateActionBloc(Clone)")
+		{
+			for (int j = 0; j < nbrecur; j++)
+			{
+				inputi.text = inputi.text + tabs + "Activate()\n";
+				inputi.MoveTextEnd(false);
+			}
+		}
+		if (stack == "ForBloc(Clone)")
+		{
+			ForLoop(editableContainer.transform.GetChild(forloop.childCount), input, nbtabs + 1);
+		}
+		if (stack == "IfDetectBloc(Clone)")
+		{
+			IfLoop(editableContainer.transform.GetChild(forloop.childCount), input, nbtabs+1);
+		}
+	}
+
+
+
+	public void IfLoop(UnityEngine.Transform ifloop, TMP_InputField inputi, int nbtabs)
+	{
+		inputi.MoveTextEnd(false);
+		string entity = "";
+		int val = ifloop.GetComponent<IfAction>().transform.GetChild(0).GetChild(1).GetComponent<TMP_Dropdown>().value;
+		if (val == 0)
+        {
+			entity = "wall";
+        }
+		if (val == 1)
+		{
+			entity = "door";
+		}
+		if (val == 2)
+		{
+			entity = "enemy";
+		}
+		if (val == 3)
+		{
+			entity = "ally";
+		}
+		if (val == 4)
+		{
+			entity = "console";
+		}
+		if (val >= 6)
+		{
+			entity = "coin";
+		}
+
+		string isit = "";
+		if (ifloop.GetComponent<IfAction>().transform.GetChild(0).GetChild(2).GetComponent<TMP_Dropdown>().value == 1)
+		{
+			isit = "not ";
+		}
+
+		string range = ifloop.GetComponent<IfAction>().transform.GetChild(0).GetChild(7).GetComponent<TMP_InputField>().text;
+
+		string direction = "";
+		val = ifloop.GetComponent<IfAction>().transform.GetChild(0).GetChild(8).GetComponent<TMP_Dropdown>().value;
+
+		if (val == 0)
+        {
+			direction = "forward";
+
+		}
+		if (val == 1)
+		{
+			direction = "behind";
+
+		}
+		if (val == 2)
+		{
+			direction = "left";
+
+		}
+		if (val == 3)
+		{
+			direction = "right";
+
+		}
+
+		inputi.text = inputi.text + "if "+isit+entity+ " at "+range+" squares "+direction+ "\n";
+
+		string stack = "";
+		int nbrecur = 0;
+		string tabs = "";
+		for (int k = 0; k < nbtabs + 1; k++)
+		{
+			tabs += "\t";
+		}
+		Debug.Log(ifloop.childCount);
+		for (int i = 0; i < ifloop.childCount; i++)
+		{
+			if (stack == ifloop.GetChild(i).name)
+			{
+				nbrecur += 1;
+			}
+			else
+			{
+				if (stack == "ForwardActionBloc(Clone)")
+				{
+					inputi.text = inputi.text + tabs + "MoveForward(" + nbrecur + ")\n";
+					input.MoveTextEnd(false);
+				}
+				if (stack == "TurnLeftActionBloc(Clone)")
+				{
+					inputi.text = inputi.text + tabs + "TurnLeft(" + nbrecur + ")\n";
+					input.MoveTextEnd(false);
+				}
+				if (stack == "TurnRightActionBloc(Clone)")
+				{
+					inputi.text = inputi.text + tabs + "TurnRight(" + nbrecur + ")\n";
+					input.MoveTextEnd(false);
+				}
+				if (stack == "WaitActionBloc(Clone)")
+				{
+					inputi.text = inputi.text + tabs + "Wait(" + nbrecur + ")\n";
+					input.MoveTextEnd(false);
+				}
+				if (stack == "ActivateActionBloc(Clone)")
+				{
+					for (int j = 0; j < nbrecur; j++)
+					{
+						inputi.text = inputi.text + tabs + "Activate()\n";
+						inputi.MoveTextEnd(false);
+					}
+				}
+				if (stack == "ForBloc(Clone)")
+				{
+					ForLoop(editableContainer.transform.GetChild(i - 1), input, nbtabs + 1);
+				}
+				if (stack == "IfDetectBloc(Clone)")
+				{
+					IfLoop(editableContainer.transform.GetChild(i - 1), input, 0);
+				}
+				nbrecur = 1;
+				stack = ifloop.GetChild(i).name;
+			}
+		}
+		if (stack == "ForwardActionBloc(Clone)")
+		{
+			inputi.text = inputi.text + tabs + "MoveForward(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "TurnLeftActionBloc(Clone)")
+		{
+			inputi.text = inputi.text + tabs + "TurnLeft(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "TurnRightActionBloc(Clone)")
+		{
+			inputi.text = inputi.text + tabs + "TurnRight(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "WaitActionBloc(Clone)")
+		{
+			inputi.text = inputi.text + tabs + "Wait(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "ActivateActionBloc(Clone)")
+		{
+			for (int j = 0; j < nbrecur; j++)
+			{
+				inputi.text = inputi.text + tabs + "Activate()\n";
+				inputi.MoveTextEnd(false);
+			}
+		}
+		if (stack == "ForBloc(Clone)")
+		{
+			ForLoop(editableContainer.transform.GetChild(ifloop.childCount), input, nbtabs + 1);
+		}
+		if (stack == "IfDetectBloc(Clone)")
+		{
+			IfLoop(editableContainer.transform.GetChild(ifloop.childCount), input, 0);
 		}
 	}
 
