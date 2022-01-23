@@ -17,7 +17,7 @@ public class SendStatements : FSystem {
     GameObject infoLevelGen; // info sur la création procedural du level 
 
 
-    private bool activeTrace = false;
+    private bool activeTrace = true;
     private GameData gameData;
     private GameObject editableContainer; // L'objet qui continent la liste d'instruction créer par l'utilisateur, contient un enfant des le début (la barre rouge)
 
