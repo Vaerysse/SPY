@@ -10,6 +10,7 @@ public class SendStatements : FSystem {
 
     private Family f_actionForLRS = FamilyManager.getFamily(new AllOfComponents(typeof(ActionPerformedForLRS)));
     private Family learnerModel = FamilyManager.getFamily(new AllOfComponents(typeof(UserModel))); // Charge les familles model
+    private Family editableScriptContainer_f = FamilyManager.getFamily(new AllOfComponents(typeof(UITypeContainer)), new AnyOfTags("ScriptConstructor"));
 
     public static SendStatements instance;
     public GameObject currentLearner;
@@ -18,6 +19,7 @@ public class SendStatements : FSystem {
 
     private bool activeTrace = false;
     private GameData gameData;
+    private GameObject editableContainer; // L'objet qui continent la liste d'instruction créer par l'utilisateur, contient un enfant des le début (la barre rouge)
 
     public SendStatements()
     {
@@ -30,6 +32,7 @@ public class SendStatements : FSystem {
             if (gameDataGO == null)
                 GameObjectManager.loadScene("TitleScreen");
             gameData = gameDataGO.GetComponent<GameData>();
+            editableContainer = editableScriptContainer_f.First();
         }
         instance = this;
     }
@@ -124,15 +127,30 @@ public class SendStatements : FSystem {
     // On envoie la liste des actions
     public void playLevelActivated()
     {
-
         if (activeTrace)
         {
+            string actionList = "";
+            for (int i = 0; i < editableContainer.transform.childCount; i++)
+            {
+                if (i < editableContainer.transform.childCount - 1)
+                {
+                    actionList = actionList + editableContainer.transform.GetChild(i).name + ", ";
+                }
+                else
+                {
+                    actionList = actionList + editableContainer.transform.GetChild(i).name;
+                }
+            }
+
             GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
             {
                 verb = "started",
                 objectType = "menu",
-                objectName = "ExectuteActionList"
+                objectName = "ExectuteActionList",
                 // ajouter data
+                activityExtensions = new Dictionary<string, string>() {
+                    { "actionList", actionList}
+                }
             });
         }
     }
@@ -165,8 +183,8 @@ public class SendStatements : FSystem {
         {
             GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
             {
-                verb = "completed", // à changer
-                objectType = "level", // à changer
+                verb = "completed", 
+                objectType = "level", 
                 objectName = "Data End Level",
                 // ajouter donnée
                 activityExtensions = new Dictionary<string, string>() {
@@ -195,8 +213,8 @@ public class SendStatements : FSystem {
         {
             GameObjectManager.addComponent<ActionPerformedForLRS>(MainLoop.instance.gameObject, new
             {
-                verb = "completed", // à changer
-                objectType = "progress", // à changer
+                verb = "completed", 
+                objectType = "progress", 
                 objectName = "New competence valide",
                 // ajouter donnée newCompetenceValideVector
                 activityExtensions = new Dictionary<string, string>() {

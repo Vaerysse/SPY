@@ -131,13 +131,10 @@ public class DragDropSystem : FSystem
 									nbtab += 1;
                                 }
                             }
-							Debug.Log(looplist.Count);
-							Debug.Log(nbtab);
 							target = looplist[nbtab];
 							if (nbtab< looplist.Count-1)
                             {
 								int difftab = looplist.Count-1 - nbtab;
-								Debug.Log(difftab);
 								for (int f=0; f< difftab; f++)
                                 {
 									looplist.RemoveAt(looplist.Count - 1);
@@ -457,11 +454,6 @@ public class DragDropSystem : FSystem
 								GameObject prefab = go.GetComponent<ElementToDrag>().actionPrefab;
 								GameObject item = UnityEngine.Object.Instantiate<GameObject>(prefab);
 								IfAction action = item.GetComponent<IfAction>();
-								Debug.Log("start");
-								Debug.Log(action.transform.GetChild(0).childCount);
-								Debug.Log(action.transform.GetChild(0).GetChild(2).GetType());
-								Debug.Log(action.transform.GetChild(0).GetChild(2).GetComponent<TMP_Dropdown>().value);
-								Debug.Log("fin");
 								int notif = 0;
 								if (k.Length > 2)
 								{
@@ -866,7 +858,6 @@ public class DragDropSystem : FSystem
 						input.MoveTextEnd(false);
 					}
 				}
-				Debug.Log(stack);
 				if (stack == "ForBloc(Clone)")
                 {
 					ForLoop(editableContainer.transform.GetChild(i-1), input, 0);
@@ -881,11 +872,48 @@ public class DragDropSystem : FSystem
 			}
 
 		}
+		if (stack == "ForwardActionBloc(Clone)")
+		{
+			input.text = input.text + "MoveForward(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "TurnLeftActionBloc(Clone)")
+		{
+			input.text = input.text + "TurnLeft(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "TurnRightActionBloc(Clone)")
+		{
+			input.text = input.text + "TurnRight(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "WaitActionBloc(Clone)")
+		{
+			input.text = input.text + "Wait(" + nbrecur + ")\n";
+			input.MoveTextEnd(false);
+		}
+		if (stack == "ActivateActionBloc(Clone)")
+		{
+			for (int j = 0; j < nbrecur; j++)
+			{
+				input.text = input.text + "Activate()\n";
+				input.MoveTextEnd(false);
+			}
+		}
+		if (stack == "ForBloc(Clone)")
+		{
+			ForLoop(editableContainer.transform.GetChild(editableContainer.transform.childCount), input, 0); ;
+		}
+
+		if (stack == "IfDetectBloc(Clone)")
+		{
+			IfLoop(editableContainer.transform.GetChild(editableContainer.transform.childCount), input, 0);
+		}
 	}
 
 	public void ForLoop(UnityEngine.Transform forloop, TMP_InputField inputi, int nbtabs)
 	{
-		inputi.text = inputi.text + "for i in range (0," + forloop.GetComponent<ForAction>().transform.GetChild(0).GetChild(1).GetComponent<TMP_InputField>().text + ")\n";
+		inputi.text = inputi.text + "for i in range (0," + forloop.GetComponent<ForAction>().transform.GetChild(0).GetChild(1).GetComponent<TMP_InputField>().text + ") :\n";
 		inputi.MoveTextEnd(false);
 		string stack = "";
 		int nbrecur = 0;
@@ -1044,7 +1072,7 @@ public class DragDropSystem : FSystem
 
 		}
 
-		inputi.text = inputi.text + "if "+isit+entity+ " at "+range+" squares "+direction+ "\n";
+		inputi.text = inputi.text + "if "+isit+entity+ " at "+range+" squares "+direction+ " :\n";
 
 		string stack = "";
 		int nbrecur = 0;
@@ -1053,7 +1081,6 @@ public class DragDropSystem : FSystem
 		{
 			tabs += "\t";
 		}
-		Debug.Log(ifloop.childCount);
 		for (int i = 0; i < ifloop.childCount; i++)
 		{
 			if (stack == ifloop.GetChild(i).name)

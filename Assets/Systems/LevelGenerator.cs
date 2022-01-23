@@ -39,6 +39,8 @@ public class LevelGenerator : FSystem {
 	int nbGate = 0;
 	// Difficulté du niveau
 	int hardlevel = 0;
+	// direction du premier bloc
+	int direct = 1;
 	// Dico des action et du nombre à créer ensuite
 	public Dictionary<string, int> actionCreation = new Dictionary<string, int>();
 
@@ -857,12 +859,12 @@ public class LevelGenerator : FSystem {
 		// Ajoute des porte et terminal de contrôle
 		int rNbGate = 0;
 		int rNbRobot = 0;
-		if (hardlevel == 1)
+		if (infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel == 1)
         {
 			rNbGate = 1;
 			rNbRobot = 1;
 		}
-		if (hardlevel == 2)
+		if (infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel == 2)
 		{
 			rNbGate = Random.Range(1, nbCorridor);
 			robotCreate = RobotCreation();
@@ -870,7 +872,7 @@ public class LevelGenerator : FSystem {
 		for (int i = 1; i <= rNbGate; i++)
 		{
 			gateCreate = GateCreation();
-			if(hardlevel > 1)
+			if(infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel > 1)
             {
 				actionCreation["Activate"] += 1;
 				//si while et if
@@ -893,7 +895,7 @@ public class LevelGenerator : FSystem {
 		for (int i = 1; i <= rNbRobot; i++)
 		{
 			robotCreate = RobotCreation();
-			if (hardlevel > 1)
+			if (infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel > 1)
 			{
 				actionCreation["Wait"] += 1;
 			}
@@ -910,9 +912,30 @@ public class LevelGenerator : FSystem {
 		//pour les vérifictions
 		vericationPath();
 
+        //Ajout ou non de la console
+        if (!infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[4])
+        {
+			GameObject[] console = GameObject.FindGameObjectsWithTag("Console");
+			console[0].SetActive(false);
+		}
+		/*
+		if (infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[4] && infoLevelGen.GetComponent<infoLevelGenerator>().hardLevel == 3)
+        {
+			Debug.Log("On vire les actions");
+			// On enléve toutes les actions pour forcer le joueur à utiliser la console
+			actionCreation["Forward"] = 0;
+			actionCreation["TurnLeft"] = 0;
+			actionCreation["TurnRight"] = 0;
+			actionCreation["Wait"] = 0;
+			actionCreation["Activate"] = 0;
+			actionCreation["TurnBack"] = 0;
+			actionCreation["If"] = 0;
+			actionCreation["For"] = 0;
+		}
+		*/
 		// On initialise la liste d'action
 		foreach (KeyValuePair<string, int> actionl in actionCreation)
-        {
+		{
 			gameData.actionBlocLimit[actionl.Key] = actionl.Value;
 		}
 
@@ -1065,7 +1088,7 @@ public class LevelGenerator : FSystem {
         if (creation)
         {
 			// Création du player
-			createEntity(start[0], start[1], (Direction.Dir)1, "player", null);
+			createEntity(start[0], start[1], (Direction.Dir) direct, "player", null);
 			// Création de la platform de téléportation bleu
 			createSpawnExit(start[0], start[1], true);
 		}
@@ -1447,24 +1470,28 @@ public class LevelGenerator : FSystem {
 				Case newCase = new Case("corridor" + nbCorridor, nbCorridor, (pathPos + i), new List<int> { x, y - i });
 				pathLevel.Add(newCase);
 				createCell(x, y - i);
+				direct = 1;
 			}
 			else if(orientation == "est")
             {
 				Case newCase = new Case("corridor" + nbCorridor, nbCorridor, (pathPos + i), new List<int> { x + i, y });
 				pathLevel.Add(newCase);
 				createCell(x + i, y );
+				direct = 2;
 			}
 			else if(orientation == "sud")
             {
 				Case newCase = new Case("corridor" + nbCorridor, nbCorridor, (pathPos + i), new List<int> { x, y + i });
 				pathLevel.Add(newCase);
 				createCell(x, y + i);
+				direct = 4;
 			}
 			else if(orientation == "ouest")
             {
 				Case newCase = new Case("corridor" + nbCorridor, nbCorridor, (pathPos + i), new List<int> { x - i, y });
 				pathLevel.Add(newCase);
 				createCell(x - i, y);
+				direct = 3;
 			}
             else
             {
@@ -1640,7 +1667,7 @@ public class LevelGenerator : FSystem {
 			//si au nord
 			if (orientation == "nord")
 			{
-
+				direct = 1;
 				for (int newx = coordx - rEnter + 1; newx <= coordx + (largeur - rEnter); newx++)
 				{
 					for (int newy = coordy - longeur; newy <= coordy - 1; newy++)
@@ -1658,6 +1685,7 @@ public class LevelGenerator : FSystem {
 			}
 			else if (orientation == "est")
 			{
+				direct = 2;
 				for (int newx = coordx + 1; newx <= coordx + largeur; newx++)
 				{
 					for (int newy = coordy - rEnter; newy <= coordy + (longeur - rEnter); newy++)
@@ -1675,6 +1703,7 @@ public class LevelGenerator : FSystem {
 			}
 			else if (orientation == "sud")
 			{
+				direct = 4;
 				for (int newx = coordx - rEnter + 1; newx <= coordx + (largeur - rEnter); newx++)
 				{
 					for (int newy = coordy + 1; newy <= coordy + longeur; newy++)
@@ -1692,6 +1721,7 @@ public class LevelGenerator : FSystem {
 			}
 			else if (orientation == "ouest")
 			{
+				direct = 3;
 				for (int newx = coordx - largeur; newx <= coordx - 1; newx++)
 				{
 					for (int newy = coordy - rEnter; newy <= coordy + (longeur - rEnter); newy++)

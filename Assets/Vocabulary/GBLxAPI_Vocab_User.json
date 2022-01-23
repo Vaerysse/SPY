@@ -5,6 +5,15 @@
     "direction": {},
     "domain": {},
     "extension": {
+        "actionlist": {
+            "description": {
+                "en-US": ""
+            },
+            "id": "https://www.lip6.fr/mocah/invaliduri/extensions/actionlist",
+            "name": {
+                "en-US": "actionlist"
+            }
+        },
         "hardlevel": {
             "description": {
                 "en-US": "difficult\u00e9 du niveau"
