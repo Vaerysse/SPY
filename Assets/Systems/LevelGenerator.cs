@@ -910,7 +910,7 @@ public class LevelGenerator : FSystem {
 		EndCreation();
 
 		//pour les vérifictions
-		vericationPath();
+		//vericationPath();
 
         //Ajout ou non de la console
         if (!infoLevelGen.GetComponent<infoLevelGenerator>().vectorCompetence[4])
@@ -2009,28 +2009,28 @@ public class LevelGenerator : FSystem {
 				creationOk = true;
 				coordRobot.Add(casePath[rCase].getCoord()[0] + 1);
 				coordRobot.Add(casePath[rCase].getCoord()[1]);
-				orientation = "2"; //Doit regarder à l'Ouest
+				orientation = "3"; //Doit regarder à l'Ouest
 			}
 			else if (!voidCase(new List<int> { casePath[rCase].getCoord()[0], casePath[rCase].getCoord()[1] + 1 }) && !EqualePath(new List<int> { casePath[rCase].getCoord()[0], casePath[rCase].getCoord()[1] + 1 }))
 			{
 				creationOk = true;
 				coordRobot.Add(casePath[rCase].getCoord()[0]);
 				coordRobot.Add(casePath[rCase].getCoord()[1] + 1);
-				orientation = "4"; //Doit regarder au Nord
+				orientation = "1"; //Doit regarder au Nord
 			}
 			else if (!voidCase(new List<int> { casePath[rCase].getCoord()[0] - 1, casePath[rCase].getCoord()[1] }) && !EqualePath(new List<int> { casePath[rCase].getCoord()[0] - 1, casePath[rCase].getCoord()[1] }))
 			{
 				creationOk = true;
 				coordRobot.Add(casePath[rCase].getCoord()[0] - 1);
 				coordRobot.Add(casePath[rCase].getCoord()[1]);
-				orientation = "3"; //Doit regarder à l'Est
+				orientation = "2"; //Doit regarder à l'Est
 			}
 			else if (!voidCase(new List<int> { casePath[rCase].getCoord()[0], casePath[rCase].getCoord()[1] - 1 }) && !EqualePath(new List<int> { casePath[rCase].getCoord()[0], casePath[rCase].getCoord()[1] - 1 }))
 			{
 				creationOk = true;
 				coordRobot.Add(casePath[rCase].getCoord()[0]);
 				coordRobot.Add(casePath[rCase].getCoord()[1] - 1);
-				orientation = "1"; //Doit regarder au Sud
+				orientation = "4"; //Doit regarder au Sud
 			}
 		}
 
