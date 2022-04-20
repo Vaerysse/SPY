@@ -6,7 +6,7 @@ Le but de l’exercice était d’améliorer un jeu sérieux déjà existant (d�
 
 La jeu sérieux SPY a pour objectif l’aide au développement de la pensée informatique. Pour cela il faut construire une séquence d’actions via les block proposés, afin de faire sortir son robot d’un labyrinthe tous en surmontant les obstacles.
 
-Il est développer sous Unity en ECS (Entity Component System) via le plugin ![Fyfy](https://github.com/Mocahteam/FYFY).
+Il est développer sous Unity en ECS (Entity Component System) via le plugin [Fyfy](https://github.com/Mocahteam/FYFY).
 
 L’ensemble des améliorations apportées se trouve dans la section de jeu « Génération niveau » (PHOTO)
 
@@ -19,7 +19,7 @@ Afin de donner un aperçue d’un langage de programmation au apprenant, nous av
 
 ### Création d’une modélisation de l’apprenant :
 
-Nous avons définie via ![CbKST](http://leas-box.cognitive-science.at/cbkstfca.html) les différentes compétences du domaine présent dans le jeu (séquence, boucle, condition, négation, langage de programmation). Nous avons ensuite créer 2 vecteurs permettant de modéliser l’état de l’apprenant à la fin de chaque niveau. Une premier vecteur indique si oui ou non l’apprenant maîtrise une conséquence spécifique, le deuxième vecteur permet de déterminer qu’elle est le niveau d’apprentissage d’une compétence. 
+Nous avons définie via [CbKST](http://leas-box.cognitive-science.at/cbkstfca.html) les différentes compétences du domaine présent dans le jeu (séquence, boucle, condition, négation, langage de programmation). Nous avons ensuite créer 2 vecteurs permettant de modéliser l’état de l’apprenant à la fin de chaque niveau. Une premier vecteur indique si oui ou non l’apprenant maîtrise une conséquence spécifique, le deuxième vecteur permet de déterminer qu’elle est le niveau d’apprentissage d’une compétence. 
 
 La modélisation de l’apprenant ce trouve dans le fichier « UserModel » dans le dossier « Components ».
 
