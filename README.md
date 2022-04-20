@@ -8,14 +8,13 @@ La jeu sérieux SPY a pour objectif l’aide au développement de la pensée inf
 
 Il est développer sous Unity en ECS (Entity Component System) via le plugin [Fyfy](https://github.com/Mocahteam/FYFY).
 
-L’ensemble des améliorations apportées se trouve dans la section de jeu « Génération niveau » (PHOTO)
+L’ensemble des améliorations apportées se trouve dans la section de jeu « Génération niveau »
 
 ## Axe d’amélioration : 
 
 ### Ajout d’un mode console :
 
 Afin de donner un aperçue d’un langage de programmation au apprenant, nous avons intégrés une console qui permet à la fois de lire en langage python la forme des instructions pour chaque block de la séquence d’actions, mais aussi d’interagir avec elle (écrire directement l’action ou les actions dans la console).
-(PHOTO)
 
 ### Création d’une modélisation de l’apprenant :
 
@@ -29,5 +28,3 @@ Grâce à l’identification des compétences nous avons pue y associer un (ou p
 
 Cela nous a permit de mettre en place des procédures de créations de niveau basées sur la modélisation de l’apprenant. Les niveaux sont générés soit pour l’apprenant travail une compétence non acquis, soit pour travailler un ensembles de compétences acquise mais mise ensemble (utilisation de boucle et de condition par exemple).
 A la sélection de la génération de niveau procédural, l’apprenant peux, si il le souhaite, définir lui même les compétences qu’il veux travailler. Seul les compétences maîtrisées ainsi que les compétences à apprendre, dont le prérequis est comblé, sont disponible.
-
-(PHOTO option + niveau aléatoire)
