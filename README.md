@@ -2,7 +2,7 @@
 
 Ce projet et un projet universitaire dans le cadre de l’UE d’ISG (Ingénierie des Serious Games) effectué en Master 2 Informatique parcours ANDROIDE. Ce projet à été fait un binôme.
 
-Le but de l’exercice était d’améliorer un jeu sérieux déjà existant (développer par les étudiants de l’année précédente) : SPY ![SPY original](https://github.com/Mocahteam/SPY)
+Le but de l’exercice était d’améliorer un jeu sérieux déjà existant (développer par les étudiants de l’année précédente) : [SPY](https://github.com/Mocahteam/SPY)
 
 La jeu sérieux SPY a pour objectif l’aide au développement de la pensée informatique. Pour cela il faut construire une séquence d’actions via les block proposés, afin de faire sortir son robot d’un labyrinthe tous en surmontant les obstacles.
 
